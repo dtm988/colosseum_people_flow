@@ -7,14 +7,77 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<main class="stub">
-  <h1>Colosseum People Flow</h1>
-  <p class="lede">Your ticket was a route, not a seat.</p>
-  <p>
-    An interactive model of how 50,000 spectators left the Flavian Amphitheatre —
-    and what happened to that building's performance when you take the routing away.
-  </p>
-  <p class="note">Deploy check. The tool itself is being built.</p>
+
+<header class="top">
+  <div class="brand">
+    <h1>Colosseum People Flow</h1>
+    <p class="lede">Your ticket was a route, not a seat.</p>
+  </div>
+  <div class="scenarios">
+    <span class="scenarios-label">Try</span>
+    <button class="scenario" data-preset="games">A day at the games</button>
+    <button class="scenario" data-preset="unrouted">Take the routing away</button>
+    <button class="scenario" data-preset="closed">Shut a quarter of the gates</button>
+  </div>
+</header>
+
+<main>
+  <section class="stage">
+    <canvas id="plan" aria-label="Plan of the amphitheatre with spectators leaving"></canvas>
+    <p class="disclaimer">A model, not a reconstruction. Click any wedge.</p>
+  </section>
+
+  <aside class="panel">
+    <div class="controls">
+      <div class="row">
+        <button id="run" class="primary">Run egress</button>
+        <button id="reset">Reset</button>
+      </div>
+
+      <fieldset>
+        <legend>Exit policy</legend>
+        <label><input type="radio" name="mode" value="routed" checked> <span>Routed — each wedge to its own gate</span></label>
+        <label><input type="radio" name="mode" value="unrouted"> <span>Unrouted — arrivals funnelled through grand entrances</span></label>
+      </fieldset>
+
+      <label class="slider">
+        <span>Gates shut <b id="closedOut">0</b> of 76</span>
+        <input type="range" id="closed" min="0" max="38" step="1" value="0">
+      </label>
+
+      <label class="slider">
+        <span>Crowd <b id="crowdOut">50,000</b></span>
+        <input type="range" id="crowd" min="10000" max="50000" step="5000" value="50000">
+      </label>
+
+      <label class="slider">
+        <span>Speed <b id="speedOut">60×</b></span>
+        <input type="range" id="speed" min="1" max="6" step="1" value="4">
+      </label>
+    </div>
+
+    <div class="metrics" id="metrics"></div>
+
+    <div class="drill" id="drill" hidden></div>
+
+    <details class="assumptions">
+      <summary>What is measured, and what is assumed</summary>
+      <div id="claimList"></div>
+    </details>
+  </aside>
 </main>
+
+<footer class="charts">
+  <figure>
+    <figcaption>Cleared over time <span class="legend" id="legend"></span></figcaption>
+    <canvas id="curve" aria-label="Percentage of the crowd cleared over time"></canvas>
+  </figure>
+  <figure>
+    <figcaption>People out through each of the eighty gates</figcaption>
+    <canvas id="strip" aria-label="Bar per gate showing how many people left through it"></canvas>
+  </figure>
+</footer>
+
+<script type="module" src="src/ui.js"></script>
 </body>
 </html>
