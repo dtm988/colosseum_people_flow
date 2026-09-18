@@ -6,23 +6,21 @@
 
 ## The idea
 
-I was in Rome a week before starting this, in the Colosseum, and what held my attention was not the spectacle but the engineering. A building that seated fifty thousand people two thousand years ago. Running water plumbed to its latrines. And a crowd that could get in and out of it at something like the rate a modern stadium manages. That a structure from the first century is still roughly competitive at moving people is a strange thing to stand inside, and I wanted to know how it was done.
+I was in the Roman Colosseum a week before starting this and found myself taken with the intricate, ancient engineering. A stadium built two thousand years ago that seated fifty thousand people and featured running water plumbed to its latrines. Its basement level could be flooded to stage naval battle reenactments, then drained and the floor put back in place to stage land skirmishes. Due to clever design, massive crowds were able to flow into and out of the Colosseum at rates commensurate with modern sports stadiums.
 
-So the project began as a question about the building's systems — water and people both — rather than a thesis about either. The research is what narrowed it. Chasing the circulation story turned up a claim repeated everywhere: fifty thousand people out in fifteen minutes. I went looking for where that number comes from and could not find a source for it — not a study, not a calculation, nothing behind any version of it.
+So the project began as a question about the building's systems — the flow of both water and people — rather than a thesis about either. The research is what narrowed it. Chasing the circulation story turned up a claim repeated everywhere: fifty thousand people out in fifteen minutes. I went looking for where that number comes from and could not find a source for it — not a study, not a calculation, nothing behind any version of it.
 
-That is where it took off. The honest answer turned out to be better than the folklore: the Colosseum has *less* egress width per person than a modern code would permit, and clears in a comparable time anyway, because of how its routes are arranged.
+That is where it took off. The honest answer turned out to be better than the folklore: the Colosseum has *less* egress width per person than a modern code would permit, yet clears in comparable time anyway, because of how its routes are arranged.
 
 ## Theme 1, and why this approach
 
-Theme 1 asks for something that builds deep understanding of a complex system, and explicitly invites "a simulation of emergent dynamics." An amphitheatre is a good fit for an unobvious reason: the thing worth understanding is not the architecture, it is the *flow*, and flow is invisible in every photograph and floor plan ever made of it.
+Theme 1 asks for something that builds deep understanding of a complex system, and explicitly invites "a simulation of emergent dynamics." While it is possible to explain the flow of people through the Colosseum in words, a visual model helps bring the theory to life and enables real world comparison to modern equivalents such as professional sports stadiums.
 
-The decision that shaped everything else was to make the explanation **operable rather than narrated**. A labelled cutaway would have demonstrated taste; it would not have demonstrated engineering. So the tool simulates 50,000 people individually, and every claim it makes about the building is something you watch happen and can then break by changing a control.
-
-The second decision was that a model nobody can check is just an animation. So `validate.js` runs the simulation headless and prints its numbers next to the published ones, with permission to disagree.
+Importantly, I decided to enable running a high-fidelity simulation live instead of showing a pre-canned animation. So the tool simulates 50,000 people individually, and every claim it makes about the building is something you can watch unfold and then the user is invited to change the input parameters and experiment with the mechanics in real time.
 
 ## What is non-obvious
 
-**The famous number has no source.** "Empties in fifteen minutes" appears everywhere — also as five minutes, also as ten — and I could not find an originating study, engineer, or calculation behind any version of it. What does exist is a 2022 peer-reviewed simulation comparing the Colosseum with a modern arena. Most of what people "know" about this building's performance is folklore with a number attached.
+**The famous number has no source.** "Empties in fifteen minutes" is a ubiquitous phrase — sometimes quoted as five or ten minutes — and I could not find an originating study, engineer, or calculation behind any version of it. What does exist is a 2022 peer-reviewed simulation comparing the Colosseum with a modern arena. Most of what people "know" about this building's performance is folklore with a number attached.
 
 **The Colosseum would fail a modern egress code.** It provides about **4.3 mm of working stair per spectator**. The International Building Code asks for 7.6 mm, or 5.1 mm in a fully sprinklered building with voice alarm. It is below even the exception — and clears the building in a time comparable to a modern arena.
 
