@@ -16,8 +16,8 @@
   <div class="scenarios">
     <span class="scenarios-label">Try</span>
     <button class="scenario" data-preset="games">A day at the games</button>
+    <button class="scenario" data-preset="modern">Build it like a modern arena</button>
     <button class="scenario" data-preset="unrouted">Take the routing away</button>
-    <button class="scenario" data-preset="closed">Shut a quarter of the gates</button>
   </div>
 </header>
 
@@ -33,6 +33,12 @@
         <button id="run" class="primary">Run egress</button>
         <button id="reset">Reset</button>
       </div>
+
+      <fieldset>
+        <legend>Building</legend>
+        <label><input type="radio" name="venue" value="colosseum" checked> <span>Colosseum — 76 arches, 2.8 m stairs</span></label>
+        <label><input type="radio" name="venue" value="modern"> <span>Modern arena — same total width, 8 grand exits, 70% effective</span></label>
+      </fieldset>
 
       <fieldset>
         <legend>Exit policy</legend>

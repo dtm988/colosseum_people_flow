@@ -27,7 +27,7 @@ const THEME = {
   agent: '#efe7db',
   gate: '#d8a657',
   gateShut: '#8c4a3f',
-  series: { routed: '#3987e5', unrouted: '#d95926' },
+  series: { colosseum: '#3987e5', modern: '#d95926' },
 };
 
 const SPEEDS = [1, 5, 15, 30, 60, 120];
@@ -41,6 +41,7 @@ const strip = new GateStrip(/** @type {HTMLCanvasElement} */ ($('strip')), THEME
 const DT = 0.2;
 
 const state = {
+  /** @type {'colosseum'|'modern'} */ venue: 'colosseum',
   /** @type {'routed'|'unrouted'} */ mode: 'routed',
   n: 50000,
   closedCount: 0,
@@ -71,16 +72,18 @@ function closedSet(count) {
 
 function build() {
   const closed = closedSet(state.closedCount);
-  state.crowd = createCrowd({
+  const c = createCrowd({
     n: state.n,
     seed: state.seed,
     mode: state.mode,
+    venue: state.venue,
     closedGates: [...closed],
   });
+  state.crowd = c;
   state.sinceSample = 0;
-  plan.setClosedGates(closed);
-  strip.set(state.crowd.gateExits, closed, state.mode);
-  curve.setRun(state.mode, state.crowd.history, state.n);
+  plan.setClosedGates(closed, new Set(c.venue.exits), c.venue.nominalStairW / value('stairWidth'));
+  strip.set(c.gateExits, closed, state.venue);
+  curve.setRun(state.venue, c.history, state.n);
   redraw();
 }
 
@@ -110,21 +113,26 @@ function renderMetrics() {
     ? `${m.t100 > published ? '+' : ''}${Math.round(m.t100 - published)}s vs published`
     : `published ${mmss(published)}`;
 
+  const effWidth = c.openGates.length * c.venue.stairW;
+  const perPerson = (effWidth / c.n) * 1000;
+
   $('metrics').innerHTML =
     tile('elapsed', mmss(c.time), `${pct}% out`) +
     tile('last out', done ? mmss(m.t100) : '—', gapTxt) +
     tile('95% out', Number.isFinite(m.t95) ? mmss(m.t95) : '—', 'robust to stragglers') +
     tile('peak stair flow', m.peakSpecificFlow ? m.peakSpecificFlow.toFixed(2) : '—',
       `p/s/m · published ${flowPub}`) +
-    tile('busiest gate', m.gateImbalance ? `${m.gateImbalance.toFixed(1)}×` : '—', 'of the average');
+    tile('stair that works', `${perPerson.toFixed(1)} mm`,
+      `per person · code asks 7.6`);
 }
 
 // --- claims drawer ---------------------------------------------------------
 
 function renderClaims() {
-  const order = ['capacity', 'publicGates', 'numerals', 'freeSpeed', 'jamSpeed', 'stairCapacity',
-    'stairWidth', 'gateWidth', 'outerHeight', 'familiarExitBias', 'familiarityIsEmergency',
-    'egressFolk', 'egressPublished', 'specificFlowColosseum', 'tesserae'];
+  const order = ['egressFolk', 'egressPublished', 'specificFlowColosseum', 'specificFlowModern4m',
+    'capacity', 'publicGates', 'numerals', 'gateWidth', 'stairWidth', 'outerHeight',
+    'freeSpeed', 'jamSpeed', 'stairCapacity', 'stairSpeed',
+    'familiarExitBias', 'familiarityIsEmergency', 'tesserae', 'modernExits', 'concourseWidth'];
   $('claimList').innerHTML = order.map((k) => {
     const f = format(k);
     return `<div class="claim"><div class="claim-h"><b>${f.text}</b><span class="chip t-${f.tier}">${f.tier}</span></div>
@@ -158,10 +166,16 @@ function renderDrill(w) {
     return `<tr><td>${t.name}</td><td>${t.occupants}</td><td class="num">${h.toFixed(0)} m</td></tr>`;
   }).join('');
 
-  const exits = state.crowd ? state.crowd.gateExits[w] : 0;
+  const c = state.crowd;
+  const exits = c ? c.gateExits[w] : 0;
+  const isExit = c ? c.venue.exits.includes(w) : true;
+  const blurb = !isExit
+    ? `No exit here. In this building the openings are gathered into ${c.venue.exits.length} grand
+       exits, so everyone seated in this wedge walks round to one of them.`
+    : `Its own stair, its own arch, its own share of the crowd. ${exits.toLocaleString()} people
+       have left through this gate.`;
   el.innerHTML = `<h3>Wedge ${w + 1}</h3>
-    <p>Its own stair, its own arch, its own share of the crowd. ${exits.toLocaleString()} people
-    have left through this gate.</p>
+    <p>${blurb}</p>
     <table><thead><tr><th>Tier</th><th>Who sat here</th><th class="num">Height</th></tr></thead>
     <tbody>${rows}</tbody></table>
     <p class="fine">Rank set your tier and tier set your height — and height was most of the
@@ -216,6 +230,16 @@ $('reset').addEventListener('click', () => {
   build();
 });
 
+for (const r of document.querySelectorAll('input[name=venue]')) {
+  r.addEventListener('change', (e) => {
+    state.venue = /** @type {any} */ (e.target).value;
+    state.running = false;
+    $('run').textContent = 'Run egress';
+    build();
+    renderLegend();
+  });
+}
+
 for (const r of document.querySelectorAll('input[name=mode]')) {
   r.addEventListener('change', (e) => {
     state.mode = /** @type {any} */ (e.target).value;
@@ -257,10 +281,11 @@ for (const b of document.querySelectorAll('.scenario')) {
   b.addEventListener('click', () => {
     const p = /** @type {HTMLElement} */ (b).dataset.preset;
     curve.clearRuns();
-    if (p === 'games') { state.mode = 'routed'; state.closedCount = 0; }
-    if (p === 'unrouted') { state.mode = 'unrouted'; state.closedCount = 0; }
-    if (p === 'closed') { state.mode = 'routed'; state.closedCount = 19; }
+    if (p === 'games') { state.venue = 'colosseum'; state.mode = 'routed'; state.closedCount = 0; }
+    if (p === 'modern') { state.venue = 'modern'; state.mode = 'unrouted'; state.closedCount = 0; }
+    if (p === 'unrouted') { state.venue = 'colosseum'; state.mode = 'unrouted'; state.closedCount = 0; }
     /** @type {HTMLInputElement} */ (document.querySelector(`input[name=mode][value=${state.mode}]`)).checked = true;
+    /** @type {HTMLInputElement} */ (document.querySelector(`input[name=venue][value=${state.venue}]`)).checked = true;
     /** @type {HTMLInputElement} */ ($('closed')).value = String(state.closedCount);
     $('closedOut').textContent = String(state.closedCount);
     build();
@@ -277,7 +302,7 @@ function renderLegend() {
 
 addEventListener('resize', () => {
   plan.resize();
-  plan.setClosedGates(closedSet(state.closedCount));
+  if (state.crowd) plan.setClosedGates(closedSet(state.closedCount), new Set(state.crowd.venue.exits));
   curve.resize();
   strip.resize();
   redraw();
@@ -307,6 +332,13 @@ window.colosseum = {
     sample(c);
     redraw();
     return metrics(c);
+  },
+  /** @param {'colosseum'|'modern'} venue */
+  setVenue(venue) {
+    state.venue = venue;
+    /** @type {HTMLInputElement} */ (document.querySelector(`input[name=venue][value=${venue}]`)).checked = true;
+    build();
+    renderLegend();
   },
   /** @param {'routed'|'unrouted'} mode */
   setMode(mode) {

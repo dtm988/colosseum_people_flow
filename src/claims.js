@@ -132,6 +132,11 @@ export const CLAIMS = {
     note: 'Modelled specific flow in the Colosseum, against 0.65-0.8 for the modern comparison - on stairs 2.8 m wide versus 4.0 m.',
     src: 'Fire (MDPI) 2022',
   },
+  specificFlowModern4m: {
+    value: 0.8, unit: 'person/s/m', tier: 'inferred',
+    note: 'Modern arena specific flow on a 4 m stair. The comparison the paper actually makes: 2.8 m of Roman stair at 1.14 p/s/m carries 3.19 people per second, and 4.0 m of modern stair at 0.80 carries 3.20. A stair 30% narrower does the same work.',
+    src: 'Fire (MDPI) 2022',
+  },
   specificFlowModern: {
     value: 0.65, unit: 'person/s/m', tier: 'inferred',
     note: 'Modern stadium (Gazprom Arena) at 2.6 m march width; 0.8 at 4 m. Density accumulates there while it falls in the Colosseum.',

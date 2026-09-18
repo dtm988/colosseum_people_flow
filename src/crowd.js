@@ -165,21 +165,31 @@ const THROAT_M = 3;
 const JAM_DENSITY = 6;
 
 /**
- * A venue is defined by how its exit capacity is DISTRIBUTED, not how much of
- * it there is. Both venues below have the same total stair width and the same
- * total arch width; they can pass the same number of people per second. The
- * only difference is whether that capacity is spread across seventy-six
- * routes or gathered into eight.
+ * A venue differs in two ways: how its exit capacity is arranged, and how much
+ * of each metre of it actually works.
  *
- * That is the architectural question the Colosseum answers, and it is the
- * comparison the published stadium study makes - narrower stairs than a modern
- * arena, and more people per second across them.
+ * The second is the one that matters, and it is measured rather than invented.
+ * The published comparison puts the Colosseum at 1.14 person/s/m and a modern
+ * arena at 0.80 on a 4 m stair - so 2.8 m of Roman stair (3.19 p/s) does the
+ * work of 4.0 m of modern stair (3.20 p/s). A stair thirty percent narrower,
+ * carrying the same people per second.
+ *
+ * That loss is modelled the standard way, as EFFECTIVE WIDTH: obstructions,
+ * turns, merging streams and the general furniture of a commercial arena mean
+ * only part of a nominal width carries flow. The ratio comes straight from the
+ * two published figures, 0.80 / 1.14 = 0.70, and nothing else in the model is
+ * touched - the speed-density curve stays exactly as measured.
+ *
+ * Importing a measured parameter and reporting its consequence is not the same
+ * as assuming the answer. The consequence - what that costs across a whole
+ * building - is what this tool computes.
  *
  * @param {'colosseum'|'modern'} kind
  */
 export function venueOf(kind) {
   const totalStair = PUBLIC_WEDGES.length * STAIR_W;
   const totalGate = PUBLIC_WEDGES.length * GATE_W;
+  const EFFICIENCY = value('specificFlowModern4m') / value('specificFlowColosseum');
 
   // The real difference between the two buildings is not how much exit
   // capacity they have - held equal here - but whether people share a corridor
@@ -201,14 +211,19 @@ export function venueOf(kind) {
     const exits = Array.from({ length: count }, (_, i) => Math.round(i * stride + stride / 2) % WEDGES);
     return {
       kind, exits,
-      stairW: totalStair / exits.length,
-      gateW: totalGate / exits.length,
+      nominalStairW: totalStair / exits.length,
+      efficiency: EFFICIENCY,
+      // Effective width: the part of the nominal width that actually carries flow.
+      stairW: (totalStair / exits.length) * EFFICIENCY,
+      gateW: (totalGate / exits.length) * EFFICIENCY,
       concourseWidth: value('concourseWidth'),
-      label: `${exits.length} grand exits`,
+      label: `${exits.length} grand exits, ${Math.round(100 * EFFICIENCY)}% effective`,
     };
   }
   return {
     kind, exits: PUBLIC_WEDGES.slice(),
+    nominalStairW: STAIR_W,
+    efficiency: 1,
     stairW: STAIR_W,
     gateW: GATE_W,
     concourseWidth: 0,   // no shared horizontal circulation at all

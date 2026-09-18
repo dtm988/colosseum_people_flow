@@ -50,6 +50,8 @@ export class PlanView {
     this.ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d', { alpha: false }));
     this.dpr = Math.min(2, window.devicePixelRatio || 1);
     /** @type {Set<number>} */ this.closed = new Set();
+    /** @type {Set<number>} */ this.exits = new Set();
+    this.gateScale = 1;
     this.showHeat = false;
     this.resize();
   }
@@ -130,15 +132,21 @@ export class PlanView {
       g.stroke();
     }
 
-    // Gates.
+    // Gates. Marker area tracks the width of the opening, so a building with
+    // a few grand exits looks like one.
     for (let w = 0; w < WEDGES; w++) {
       const p = ellipsePoint(wedgeAngle(w), 1);
       const [x, y] = this.px(p.x, p.y);
       const axial = isAxial(w);
+      const isExit = this.exits.size === 0 ? !axial : this.exits.has(w);
       const shut = this.closed.has(w);
+      let r = 1.1;
+      let fill = T.structureDim;
+      if (isExit) { r = 2.6 * Math.sqrt(this.gateScale); fill = shut ? T.gateShut : T.gate; }
+      else if (axial) { r = 3.0; fill = T.muted; }
       g.beginPath();
-      g.arc(x, y, (axial ? 3.4 : 2.6) * this.dpr, 0, Math.PI * 2);
-      g.fillStyle = axial ? T.muted : shut ? T.gateShut : T.gate;
+      g.arc(x, y, r * this.dpr, 0, Math.PI * 2);
+      g.fillStyle = fill;
       g.fill();
     }
 
@@ -161,9 +169,15 @@ export class PlanView {
 
   }
 
-  /** @param {Set<number>} closed */
-  setClosedGates(closed) {
+  /**
+   * @param {Set<number>} closed
+   * @param {Set<number>} [exits] which wedges are exits at all
+   * @param {number} [gateScale] width of each opening relative to a Roman arch
+   */
+  setClosedGates(closed, exits, gateScale) {
     this.closed = closed;
+    if (exits) this.exits = exits;
+    if (gateScale) this.gateScale = gateScale;
     this.buildStatic();
   }
 

@@ -9,7 +9,7 @@
  * monotonicity, and determinism.
  */
 
-import { createCrowd, runToCompletion, speedAt } from './src/crowd.js';
+import { createCrowd, runToCompletion, speedAt, venueOf } from './src/crowd.js';
 import { CLAIMS } from './src/claims.js';
 
 const mmss = (s) => (Number.isFinite(s) ? `${Math.floor(s / 60)}m ${String(Math.round(s % 60)).padStart(2, '0')}s` : '—');
@@ -51,15 +51,32 @@ for (const [mode, r] of Object.entries(runs)) {
 }
 
 console.log('\nAgainst the literature');
-const published = CLAIMS.egressPublished.value;
-const publishedFlow = CLAIMS.specificFlowColosseum.value;
-const gap = runs.routed.t100 - Number(published);
-console.log(`  published last-person-out   ${mmss(Number(published))}   (${CLAIMS.egressPublished.src})`);
+const published = Number(CLAIMS.egressPublished.value);
+const publishedFlow = Number(CLAIMS.specificFlowColosseum.value);
+const gap = runs.routed.t100 - published;
+console.log(`  published last-person-out   ${mmss(published)}   (${CLAIMS.egressPublished.src})`);
 console.log(`  this model, routed          ${mmss(runs.routed.t100)}   (${gap >= 0 ? '+' : ''}${Math.round(gap)}s)`);
 console.log(`  published specific flow     ${publishedFlow} p/s/m  (on stairs)`);
 console.log(`  this model, peak on stairs  ${f2(runs.routed.peakSpecificFlow)} p/s/m`);
-console.log(`  this model, mean on stairs  ${f2(runs.routed.meanSpecificFlow)} p/s/m`);
 console.log(`  the famous claim            ${CLAIMS.egressFolk.value} ${CLAIMS.egressFolk.unit}  [${CLAIMS.egressFolk.tier}]`);
+
+// --- the comparison the paper actually makes -------------------------------
+
+console.log('\nRoman stair vs modern stair (the paper\'s claim, checked)');
+const fC = Number(CLAIMS.specificFlowColosseum.value);
+const fM = Number(CLAIMS.specificFlowModern4m.value);
+console.log(`  2.8 m at ${fC} p/s/m = ${f2(2.8 * fC)} people/s`);
+console.log(`  4.0 m at ${fM} p/s/m = ${f2(4.0 * fM)} people/s`);
+check('a 30% narrower Roman stair carries the same flow', Math.abs(2.8 * fC - 4.0 * fM) < 0.05,
+  `${f2(2.8 * fC)} vs ${f2(4.0 * fM)} p/s`);
+
+const modern = runToCompletion(createCrowd({ n: N, seed: 12345, venue: 'modern' }));
+const vC = venueOf('colosseum'), vM = venueOf('modern');
+console.log('\nWhole building, same nominal exit width');
+console.log(`  Colosseum   ${vC.exits.length} stairs x ${f2(vC.stairW)} m effective  ->  ${mmss(runs.routed.t100)}`);
+console.log(`  Modern      ${vM.exits.length} stairs x ${f2(vM.nominalStairW)} m nominal, ${f2(vM.stairW)} m effective  ->  ${mmss(modern.t100)}`);
+console.log(`  To match the Colosseum it needs ${Math.round(100 / vM.efficiency - 100)}% more staircase.`);
+console.log(`  Colosseum egress width: ${f2(vC.exits.length * vC.stairW / N * 1000)} mm per spectator; a modern code asks 7.6 mm.`);
 
 console.log('\nInvariants');
 for (const [mode, r] of Object.entries(runs)) {
