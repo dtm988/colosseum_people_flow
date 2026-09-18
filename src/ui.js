@@ -9,6 +9,7 @@ import { PlanView } from './render.js';
 import { ClearanceChart, GateStrip, mmss } from './chart.js';
 import { CLAIMS, format, value } from './claims.js';
 import { TIERS, WEDGES, PUBLIC_WEDGES, isAxial, heightAt } from './geometry.js';
+import { Tour } from './tour.js';
 
 /**
  * Palette. Two categorical slots for the two exit policies, validated for
@@ -186,7 +187,18 @@ function renderDrill(w) {
 
 let last = 0;
 function frame(ts) {
-  requestAnimationFrame(frame);
+  // Re-measure once layout has settled. The ResizeObserver covers the normal
+// case, but it does not fire in a background tab, and a canvas sized against a
+// stale box gets stretched - which quietly turns a 189 x 156 m ellipse into
+// something suspiciously circular.
+const remeasure = () => { plan.resize(); curve.resize(); strip.resize(); redraw(); };
+requestAnimationFrame(remeasure);
+addEventListener('load', remeasure);
+
+// Open on the tour: a stranger should not have to guess what they are looking at.
+tour.start();
+
+requestAnimationFrame(frame);
   const c = state.crowd;
   if (!c) return;
 
@@ -280,6 +292,8 @@ $('plan').addEventListener('click', (e) => {
 for (const b of document.querySelectorAll('.scenario')) {
   b.addEventListener('click', () => {
     const p = /** @type {HTMLElement} */ (b).dataset.preset;
+    if (p === 'tour') return;
+    tour.stop();
     curve.clearRuns();
     if (p === 'games') { state.venue = 'colosseum'; state.mode = 'routed'; state.closedCount = 0; }
     if (p === 'modern') { state.venue = 'modern'; state.mode = 'unrouted'; state.closedCount = 0; }
@@ -349,8 +363,53 @@ window.colosseum = {
   },
 };
 
+// --- guided tour -----------------------------------------------------------
+
+const tour = new Tour($('tour'), {
+  setVenue(v) {
+    state.venue = v;
+    /** @type {HTMLInputElement} */ (document.querySelector(`input[name=venue][value=${v}]`)).checked = true;
+  },
+  setMode(m) {
+    state.mode = m;
+    /** @type {HTMLInputElement} */ (document.querySelector(`input[name=mode][value=${m}]`)).checked = true;
+  },
+  reset() { curve.clearRuns(); build(); renderLegend(); },
+  run(on) {
+    state.running = on;
+    $('run').textContent = on ? 'Pause' : 'Run egress';
+  },
+  setSpeed(x) {
+    state.speed = x;
+    $('speedOut').textContent = `${x}×`;
+    /** @type {HTMLInputElement} */ ($('speed')).value = String(SPEEDS.indexOf(x) + 1 || 4);
+  },
+  highlight(h) { plan.highlight = h; },
+  claims(open) { /** @type {HTMLDetailsElement} */ ($('claimsBox')).open = open; },
+});
+
+$('tour').addEventListener('click', (e) => {
+  const act = /** @type {HTMLElement} */ (e.target).dataset?.tour;
+  if (act === 'next') tour.next();
+  else if (act === 'prev') tour.prev();
+  else if (act === 'stop') tour.stop();
+});
+
+document.querySelector('.tour-start')?.addEventListener('click', () => tour.start());
+
 renderClaims();
 build();
 renderLegend();
 $('speedOut').textContent = `${state.speed}×`;
+// Re-measure once layout has settled. The ResizeObserver covers the normal
+// case, but it does not fire in a background tab, and a canvas sized against a
+// stale box gets stretched - which quietly turns a 189 x 156 m ellipse into
+// something suspiciously circular.
+const remeasure = () => { plan.resize(); curve.resize(); strip.resize(); redraw(); };
+requestAnimationFrame(remeasure);
+addEventListener('load', remeasure);
+
+// Open on the tour: a stranger should not have to guess what they are looking at.
+tour.start();
+
 requestAnimationFrame(frame);

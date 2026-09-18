@@ -14,7 +14,8 @@
     <p class="lede">Your ticket was a route, not a seat.</p>
   </div>
   <div class="scenarios">
-    <span class="scenarios-label">Try</span>
+    <button class="scenario tour-start" data-preset="tour">Guided tour</button>
+    <span class="scenarios-label">or try</span>
     <button class="scenario" data-preset="games">A day at the games</button>
     <button class="scenario" data-preset="modern">Build it like a modern arena</button>
     <button class="scenario" data-preset="unrouted">Take the routing away</button>
@@ -24,6 +25,7 @@
 <main>
   <section class="stage">
     <canvas id="plan" aria-label="Plan of the amphitheatre with spectators leaving"></canvas>
+    <aside id="tour" class="tour" hidden></aside>
     <p class="disclaimer">A model, not a reconstruction. Click any wedge.</p>
   </section>
 
@@ -66,7 +68,7 @@
 
     <div class="drill" id="drill" hidden></div>
 
-    <details class="assumptions">
+    <details class="assumptions" id="claimsBox">
       <summary>What is measured, and what is assumed</summary>
       <div id="claimList"></div>
     </details>

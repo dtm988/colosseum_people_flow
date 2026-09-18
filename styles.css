@@ -166,3 +166,45 @@ figcaption { color: var(--muted); font-size: 0.76rem; display: flex; gap: 0.7rem
   .panel { max-height: none; }
   .charts { grid-template-columns: 1fr; }
 }
+
+/* ---- guided tour ---- */
+
+.tour {
+  position: absolute;
+  left: 1rem;
+  bottom: 2.4rem;
+  width: min(25rem, calc(100% - 2rem));
+  background: rgba(20, 17, 14, 0.94);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.85rem 0.95rem 0.9rem;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+}
+
+.tour-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; }
+.tour-count { color: var(--muted); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.tour-skip { background: none; border: none; color: var(--muted); font-size: 0.74rem; padding: 0.1rem 0.2rem; }
+.tour-skip:hover { color: var(--ink); border: none; }
+
+.tour h2 { margin: 0 0 0.35rem; font-size: 1rem; font-weight: 650; letter-spacing: -0.01em; }
+.tour p { margin: 0 0 0.6rem; font-size: 0.84rem; line-height: 1.5; color: var(--ink-2); }
+.tour b { color: var(--ink); font-weight: 620; }
+.tour em { color: var(--accent); font-style: italic; }
+
+.tour-watch {
+  border-left: 2px solid var(--accent);
+  padding-left: 0.6rem;
+  color: var(--accent) !important;
+  font-size: 0.8rem !important;
+}
+
+.tour-nav { display: flex; gap: 0.5rem; justify-content: flex-end; }
+.tour-nav button { min-width: 5rem; }
+.tour-nav button:disabled { opacity: 0.4; cursor: default; }
+
+.tour-start { border-color: var(--accent) !important; color: var(--accent); }
+
+@media (max-width: 900px) {
+  .tour { position: static; width: auto; margin: 0.6rem; }
+}

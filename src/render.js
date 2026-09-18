@@ -53,13 +53,25 @@ export class PlanView {
     /** @type {Set<number>} */ this.exits = new Set();
     this.gateScale = 1;
     this.showHeat = false;
+    /** @type {null | {type: string, wedge?: number, tier?: number, label?: string}} */
+    this.highlight = null;
     this.resize();
+
+    // The canvas is sized from its own box, and that box is not final when the
+    // module first runs - a grid cell settles after layout. Without this the
+    // backing store keeps a stale aspect ratio and the browser stretches it,
+    // which quietly turns a 189 x 156 m ellipse into something near circular.
+    if (typeof ResizeObserver !== 'undefined') {
+      this._ro = new ResizeObserver(() => this.resize());
+      this._ro.observe(canvas);
+    }
   }
 
   resize() {
     const rect = this.canvas.getBoundingClientRect();
     const w = Math.max(320, Math.floor(rect.width * this.dpr));
     const h = Math.max(240, Math.floor(rect.height * this.dpr));
+    if (w === this.w && h === this.h) return;
     this.canvas.width = w;
     this.canvas.height = h;
     this.w = w;
@@ -243,6 +255,111 @@ export class PlanView {
     }
 
     this.ctx.putImageData(this.frame, 0, 0);
+    if (this.highlight) this.drawHighlight(crowd);
+  }
+
+  /**
+   * The guided tour's pointing finger. Drawn over the finished frame with
+   * ordinary vector calls, so it can dim the rest of the building and outline
+   * the part being talked about.
+   * @param {import('./crowd.js').Crowd} crowd
+   */
+  drawHighlight(crowd) {
+    const g = this.ctx;
+    const T = this.theme;
+    const D = this.dpr;
+    const h = this.highlight;
+    if (!h) return;
+
+    const sector = (w, t0, t1) => {
+      const half = WEDGE_ANGLE / 2;
+      const a0 = wedgeAngle(w) - half;
+      const a1 = wedgeAngle(w) + half;
+      g.beginPath();
+      for (let i = 0; i <= 12; i++) {
+        const p = ellipsePoint(a0 + ((a1 - a0) * i) / 12, t0);
+        const [x, y] = this.px(p.x, p.y);
+        i ? g.lineTo(x, y) : g.moveTo(x, y);
+      }
+      for (let i = 12; i >= 0; i--) {
+        const p = ellipsePoint(a0 + ((a1 - a0) * i) / 12, t1);
+        g.lineTo(...this.px(p.x, p.y));
+      }
+      g.closePath();
+    };
+
+    const band = (t0, t1) => {
+      g.beginPath();
+      for (let i = 0; i <= 240; i++) {
+        const p = ellipsePoint((i / 240) * Math.PI * 2, t1);
+        const [x, y] = this.px(p.x, p.y);
+        i ? g.lineTo(x, y) : g.moveTo(x, y);
+      }
+      for (let i = 240; i >= 0; i--) {
+        const p = ellipsePoint((i / 240) * Math.PI * 2, t0);
+        g.lineTo(...this.px(p.x, p.y));
+      }
+      g.closePath();
+    };
+
+    g.save();
+
+    if (h.type === 'wedge' && h.wedge != null) {
+      // Dim everything, then punch the wedge back through.
+      g.fillStyle = 'rgba(13,11,9,0.72)';
+      g.fillRect(0, 0, this.w, this.h);
+      g.globalCompositeOperation = 'destination-out';
+      sector(h.wedge, 0, WORLD_R);
+      g.fill();
+      g.globalCompositeOperation = 'source-over';
+      sector(h.wedge, 0, 1);
+      g.strokeStyle = T.gate;
+      g.lineWidth = 1.5 * D;
+      g.stroke();
+    } else if (h.type === 'tier' && h.tier != null) {
+      const tier = TIERS[h.tier];
+      g.fillStyle = 'rgba(13,11,9,0.7)';
+      g.fillRect(0, 0, this.w, this.h);
+      g.globalCompositeOperation = 'destination-out';
+      band(tier.t0, tier.t1);
+      g.fill();
+      g.globalCompositeOperation = 'source-over';
+      band(tier.t0, tier.t1);
+      g.strokeStyle = T.gate;
+      g.lineWidth = 1.5 * D;
+      g.stroke();
+    } else if (h.type === 'exits') {
+      for (const w of crowd.venue.exits) {
+        const p = ellipsePoint(wedgeAngle(w), 1);
+        const [x, y] = this.px(p.x, p.y);
+        g.beginPath();
+        g.arc(x, y, 9 * D * Math.sqrt(this.gateScale), 0, Math.PI * 2);
+        g.strokeStyle = T.gate;
+        g.lineWidth = 1.5 * D;
+        g.stroke();
+      }
+    } else if (h.type === 'arena') {
+      // The arena is already the darkest thing on screen, so dimming around it
+      // would just make a black hole. Outline it instead.
+      g.beginPath();
+      for (let i = 0; i <= 240; i++) {
+        const p = ellipsePoint((i / 240) * Math.PI * 2, 0);
+        const [x, y] = this.px(p.x, p.y);
+        i ? g.lineTo(x, y) : g.moveTo(x, y);
+      }
+      g.closePath();
+      g.strokeStyle = T.gate;
+      g.lineWidth = 2 * D;
+      g.stroke();
+
+      g.font = `${12 * D}px system-ui, -apple-system, sans-serif`;
+      g.fillStyle = T.gate;
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillText('the arena — 87 × 55 m', this.cx, this.cy);
+    }
+
+    g.restore();
   }
 
   /**
