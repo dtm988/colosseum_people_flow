@@ -12,8 +12,8 @@
 import {
   OUTER, ARENA, WEDGES, WEDGE_ANGLE, TIERS, AXIAL_WEDGES, isAxial,
   ellipsePoint, wedgeAngle,
-} from './geometry.js?v=b12';
-import { EXIT_T } from './crowd.js?v=b12';
+} from './geometry.js?v=b14';
+import { EXIT_T } from './crowd.js?v=b14';
 
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
 /** @param {number} n */
@@ -152,13 +152,22 @@ export class PlanView {
       const axial = isAxial(w);
       const isExit = this.exits.size === 0 ? !axial : this.exits.has(w);
       const shut = this.closed.has(w);
-      let r = 1.1;
-      let fill = T.structureDim;
-      if (isExit) { r = 2.6 * Math.sqrt(this.gateScale); fill = shut ? T.gateShut : T.gate; }
-      else if (axial) { r = 3.0; fill = T.muted; }
+      if (axial) {
+        // The four reserved arches: the imperial box, the ceremonial gate, and
+        // the Porta Libitinaria. Drawn hollow, because nobody ordinary ever
+        // came out of them - and a reader who notices they stay empty should
+        // be able to see that is the design rather than a fault.
+        g.beginPath();
+        g.arc(x, y, 3.6 * this.dpr, 0, Math.PI * 2);
+        g.strokeStyle = T.muted;
+        g.lineWidth = 1.4 * this.dpr;
+        g.stroke();
+        continue;
+      }
+      const r = isExit ? 2.6 * Math.sqrt(this.gateScale) : 1.1;
       g.beginPath();
       g.arc(x, y, r * this.dpr, 0, Math.PI * 2);
-      g.fillStyle = fill;
+      g.fillStyle = isExit ? (shut ? T.gateShut : T.gate) : T.structureDim;
       g.fill();
     }
 

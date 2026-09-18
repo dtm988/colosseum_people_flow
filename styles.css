@@ -245,3 +245,10 @@ figcaption { color: var(--muted); font-size: 0.76rem; display: flex; gap: 0.7rem
   font-size: 0.8rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
+
+.disclaimer { display: flex; gap: 0.9rem; flex-wrap: wrap; align-items: center; }
+.disclaimer .k { display: inline-flex; align-items: center; gap: 0.32rem; color: var(--ink-2); }
+.disclaimer .k i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.disclaimer .k-gate { background: var(--accent); }
+.disclaimer .k-axial { border: 1.5px solid var(--muted); }
+.disclaimer .k-note { color: var(--muted); }

@@ -53,7 +53,12 @@ export const STEPS = [
            seats, its own stairway, and its own arch onto the street.
            <br><br>Four of the eighty were reserved — the imperial box, the ceremonial gate, and
            the Porta Libitinaria, by which the dead left. That leaves <b>76 public arches</b>,
-           and the Roman numerals identifying them are still carved above the surviving ones.`,
+           and the Roman numerals identifying them are still carved above the surviving ones.
+           <br><br>You can pick the reserved four out on the plan: they are the <b>hollow
+           rings</b> at the compass points, numbered I, XXI, XLI and LXI. Watch them during the
+           egress and nobody comes out of them at all. That is not the model failing — no
+           ordinary spectator ever used those arches, and every capacity figure in this tool
+           divides the crowd across the other seventy-six.`,
     setup: (api) => {
       api.reset();
       api.run(false);
