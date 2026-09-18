@@ -135,7 +135,7 @@ function renderMetrics(force = false) {
 
 function renderClaims() {
   const order = ['egressFolk', 'egressPublished', 'specificFlowColosseum', 'specificFlowModern4m',
-    'capacity', 'publicGates', 'numerals', 'gateWidth', 'stairWidth', 'outerHeight',
+    'capacity', 'arches', 'publicGates', 'numerals', 'gateWidth', 'stairWidth', 'outerHeight', 'prefabricated',
     'freeSpeed', 'jamSpeed', 'stairCapacity', 'stairSpeed',
     'familiarExitBias', 'familiarityIsEmergency', 'tesserae', 'modernExits'];
   $('claimList').innerHTML = order.map((k) => {

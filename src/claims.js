@@ -4,8 +4,10 @@
  *
  * Nothing renders a figure without going through `format()`, so presenting a
  * contested claim as settled fact is structurally impossible rather than a
- * discipline someone has to remember. This file is the reason the water
- * simulation was cut: its channel topology had no tier to put it in.
+ * discipline someone has to remember. It is also what caught the planned water
+ * simulation: the arena flooding has sourced volumes and flow rates, but its
+ * channel topology had no tier to put it in, so the act was cut rather than
+ * invented. Every entry below is one the tool actually displays.
  *
  * Tiers:
  *   attested  - physical/archaeological evidence, or an unambiguous ancient source
@@ -132,11 +134,6 @@ export const CLAIMS = {
     note: 'Modern arena specific flow on a 4 m stair. The comparison the paper actually makes: 2.8 m of Roman stair at 1.14 p/s/m carries 3.19 people per second, and 4.0 m of modern stair at 0.80 carries 3.20. A stair 30% narrower does the same work.',
     src: 'Fire (MDPI) 2022',
   },
-  specificFlowModern: {
-    value: 0.65, unit: 'person/s/m', tier: 'inferred',
-    note: 'Modern stadium (Gazprom Arena) at 2.6 m march width; 0.8 at 4 m. Density accumulates there while it falls in the Colosseum.',
-    src: 'Fire (MDPI) 2022',
-  },
   freeSpeed: {
     value: 1.3, unit: 'm/s', tier: 'attested',
     note: 'Free walking speed below ~0.2 p/m^2. From roughly 35,000 counts across 100 series of observations.',
@@ -163,32 +160,6 @@ export const CLAIMS = {
     src: '-',
   },
 
-  // ---- water (epilogue card only - no simulation) -----------------------
-  floodVolume: {
-    value: 5600, unit: 'm^3', tier: 'inferred',
-    note: 'Arena area x 1.5 m depth. Crapper computes 4,241 m^3 using 80 x 45 m dimensions.',
-    src: 'Crapper via Encyclopaedia Romana',
-  },
-  aqueductFlow: {
-    value: 1.06, unit: 'm^3/s', tier: 'inferred',
-    note: 'Aqua Claudia ran 2.12 m^3/s at source, about half that at the Caelian distribution point - and perhaps 0.84 delivered, given what Frontinus says about water theft.',
-    src: 'Crapper via Encyclopaedia Romana',
-  },
-  drainRate: {
-    value: 0.75, unit: 'm^3/s', tier: 'inferred',
-    note: 'Hypogeal channel capacity during heavy rainfall. Drain time after a flooding is not established anywhere in the literature; at this rate it would take about two hours.',
-    src: 'Encyclopaedia Romana',
-  },
-  naumachiaWindow: {
-    value: '80-85 AD', tier: 'inferred',
-    note: 'Cassius Dio has Titus fill "this same theatre" with water; Suetonius has Domitian do it too. Then Domitian built the hypogeum, and no naumachia is recorded afterwards.',
-    src: 'Encyclopaedia Romana; Bad Ancient',
-  },
-  floodTopology: {
-    value: 'unknown', tier: 'contested',
-    note: 'Where the water entered, how it was distributed, how it drained. No archaeological evidence survives for the link from the Caelian, and no pipes have been found inside the building. This is why the water act was cut rather than animated.',
-    src: 'Encyclopaedia Romana; Science Friday',
-  },
 };
 
 /** Human-readable labels for each tier, for chips and legends. */

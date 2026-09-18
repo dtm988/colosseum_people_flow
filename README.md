@@ -44,6 +44,8 @@ node validate.js
 
 Runs the simulation headless and prints what it produces next to the published figures — it is allowed to disagree with them, and does. It hard-fails on the invariants: agent conservation, a monotone clearance curve, no NaN, determinism from the seed, and that the build version agrees across every file.
 
+(The model and the CLI call the two exit policies `routed` and `unrouted`; the interface calls them *assigned* and *free choice*.)
+
 ```
 Clearance
   mode        t50        t95        t100      busiest/mean   peak flow
@@ -83,7 +85,7 @@ src/render.js         plan view
 src/chart.js          clearance curve and gate strip
 src/tour.js           the nine-step explainer
 src/ui.js             wiring
-validate.js           headless model check — what CI runs
+validate.js           headless model check
 ```
 
 Nothing above `render.js` imports anything DOM, which is how the same modules run in the browser and in Node.

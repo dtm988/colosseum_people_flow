@@ -58,7 +58,7 @@ That last division is the whole credibility of the exercise. The model's peak st
 
 ## Decisions and tradeoffs
 
-**Vanilla JavaScript, zero runtime dependencies, no build step.** Not because a toolchain was unavailable — it wasn't — but because of this artifact's lifespan and review context. It is ~2,800 lines, single author, and one of the ways it gets read is source-in-a-browser. A build step means either a committed `dist/` (confusing in exactly that view) or a Pages action that can fail silently between submission and review. `// @ts-check` with JSDoc gives editor-level type safety with none of that. For a codebase with a year and three contributors ahead of it I would use TypeScript without hesitating.
+**Vanilla JavaScript, zero runtime dependencies, no build step.** Not because a toolchain was unavailable — it wasn't — but because of this artifact's lifespan and review context. It is ~2,900 lines, single author, and one of the ways it gets read is source-in-a-browser. A build step means either a committed `dist/` (confusing in exactly that view) or a Pages action that can fail silently between submission and review. `// @ts-check` with JSDoc gives editor-level type safety with none of that. For a codebase with a year and three contributors ahead of it I would use TypeScript without hesitating.
 
 **The simulation core is DOM-free.** Nothing in `claims`, `rng`, `geometry` or `crowd` imports anything from the browser, so the same modules run in Node. That is what makes the headless check possible, and it is why determinism is testable at all.
 
@@ -104,9 +104,11 @@ The most useful results were the ones that contradicted me.
 
 ## Time spent
 
-**⚠️ TO FILL IN BEFORE SUBMITTING: approximately ___ hours.**
+**About three hours of my own time**, spread across two sittings.
 
-Roughly: planning and source verification ~1.5h, model ~2h, visualisation and tour ~2h, debugging and code review ~1.5h. Well over the 1–2 hour target, under the 8 hour limit. I kept going because each round of checking the model against the literature produced a different answer than the one before, and stopping before that converged would have meant shipping a confident number I did not believe.
+I built this by directing Claude Code rather than typing the implementation, so the honest measure is engaged time rather than elapsed time. Reconstructed from the session transcript: ~1,300 words written by me and ~19,000 read, which is roughly 20 minutes typing and 85 minutes reading, plus perhaps an hour driving the tool, reading the inspector, and deciding what to do next. Call it three hours. Elapsed wall-clock across the two sittings was about twenty hours, most of it not at the keyboard.
+
+Where that time actually went is the interesting part, and it was not construction. It went on judgement calls: choosing the theme, cutting the water act when the evidence wouldn't support it, rejecting a dramatic-but-wrong routed/unrouted comparison, noticing the subtitle buried the lead, deciding the gates-shut control didn't explain anything, spotting in the inspector that an element was re-rendering sixty times a second, and calling for a code review that found a bug in the headline number. The implementation was fast. Working out what was true took the time.
 
 ## Sources
 
