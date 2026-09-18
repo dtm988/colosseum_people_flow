@@ -19,12 +19,12 @@
  * headline result and then reports it as a finding is worthless.
  */
 
-import { value } from './claims.js?v=b10';
+import { value } from './claims.js?v=b11';
 import {
   OUTER, ARENA, WEDGES, WEDGE_ANGLE, TIERS, PUBLIC_WEDGES, AXIAL_WEDGES,
   ellipsePoint, wedgeAngle, descentLength,
-} from './geometry.js?v=b10';
-import { mulberry32, weightedPick, geometricOffset } from './rng.js?v=b10';
+} from './geometry.js?v=b11';
+import { mulberry32, weightedPick, geometricOffset } from './rng.js?v=b11';
 
 // ---------------------------------------------------------------------------
 // Behavioural constants, all traceable to claims.js

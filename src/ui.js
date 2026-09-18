@@ -4,12 +4,12 @@
  * the building lives in the modules this imports.
  */
 
-import { createCrowd, step, sample, metrics, EXIT_T } from './crowd.js?v=b10';
-import { PlanView } from './render.js?v=b10';
-import { ClearanceChart, GateStrip, mmss } from './chart.js?v=b10';
-import { CLAIMS, format, value } from './claims.js?v=b10';
-import { TIERS, WEDGES, PUBLIC_WEDGES, isAxial, heightAt } from './geometry.js?v=b10';
-import { Tour } from './tour.js?v=b10';
+import { createCrowd, step, sample, metrics, EXIT_T } from './crowd.js?v=b11';
+import { PlanView } from './render.js?v=b11';
+import { ClearanceChart, GateStrip, mmss } from './chart.js?v=b11';
+import { CLAIMS, format, value } from './claims.js?v=b11';
+import { TIERS, WEDGES, PUBLIC_WEDGES, isAxial, heightAt } from './geometry.js?v=b11';
+import { Tour } from './tour.js?v=b11';
 
 /**
  * Palette. Two categorical slots for the two exit policies, validated for
@@ -34,7 +34,7 @@ const THEME = {
 const SPEEDS = [1, 5, 15, 30, 60, 120];
 
 /** Bumped on every deploy, so "which build am I looking at" is never a guess. */
-const BUILD = 'b10';
+const BUILD = 'b11';
 console.log(`[colosseum] build ${BUILD} — tour: click, arrow keys, or Escape`);
 
 const $ = (/** @type {string} */ id) => /** @type {HTMLElement} */ (document.getElementById(id));
@@ -198,18 +198,7 @@ function renderDrill(w) {
 
 let last = 0;
 function frame(ts) {
-  // Re-measure once layout has settled. The ResizeObserver covers the normal
-// case, but it does not fire in a background tab, and a canvas sized against a
-// stale box gets stretched - which quietly turns a 189 x 156 m ellipse into
-// something suspiciously circular.
-const remeasure = () => { plan.resize(); curve.resize(); strip.resize(); redraw(); };
-requestAnimationFrame(remeasure);
-addEventListener('load', remeasure);
-
-// Open on the tour: a stranger should not have to guess what they are looking at.
-tour.start();
-
-requestAnimationFrame(frame);
+  requestAnimationFrame(frame);
   const c = state.crowd;
   if (!c) return;
 
@@ -421,24 +410,6 @@ const tour = new Tour($('tour'), {
     const box = /** @type {HTMLDetailsElement|null} */ (document.getElementById('claimsBox'));
     if (box) box.open = open;
   },
-});
-
-// Delegated on the document rather than the card, and matched with closest()
-// rather than by reading dataset off the exact click target - the card rebuilds
-// its own innerHTML on every step, and a click that lands on anything nested
-// inside a button should still count.
-document.addEventListener('click', (e) => {
-  const hit = /** @type {HTMLElement} */ (e.target)?.closest?.('[data-tour]');
-  if (!hit) return;
-  const act = /** @type {HTMLElement} */ (hit).dataset.tour;
-  try {
-    if (act === 'next') tour.next();
-    else if (act === 'prev') tour.prev();
-    else if (act === 'stop') tour.stop();
-  } catch (err) {
-    showFault(`Tour step failed: ${err && err.message ? err.message : err}`);
-    throw err;
-  }
 });
 
 // Arrow keys work too, so the tour is navigable without aiming at a button.
