@@ -8,7 +8,7 @@
  * carry the meaning.
  */
 
-import { WEDGES, isAxial } from './geometry.js?v=b14';
+import { WEDGES, isAxial } from './geometry.js?v=b15';
 
 const FONT = '11px system-ui, -apple-system, "Segoe UI", sans-serif';
 const MONO = '11px ui-monospace, SFMono-Regular, Menlo, monospace';
@@ -143,14 +143,12 @@ export class GateStrip extends Base {
   constructor(canvas, theme) {
     super(canvas, theme);
     this.counts = new Uint32Array(WEDGES);
-    /** @type {Set<number>} */ this.closed = new Set();
-    this.seriesKey = 'routed';
+    this.seriesKey = 'colosseum';
   }
 
-  /** @param {Uint32Array} counts @param {Set<number>} closed @param {string} key */
-  set(counts, closed, key) {
+  /** @param {Uint32Array} counts @param {string} key */
+  set(counts, key) {
     this.counts = counts;
-    this.closed = closed;
     this.seriesKey = key;
   }
 
@@ -185,7 +183,7 @@ export class GateStrip extends Base {
       const hgt = (v / max) * plotH;
       const y = padT + plotH - hgt;
 
-      g.fillStyle = isAxial(w) ? T.structureDim : this.closed.has(w) ? T.gateShut : T.series[this.seriesKey];
+      g.fillStyle = isAxial(w) ? T.structureDim : T.series[this.seriesKey];
       if (hgt < 1) {
         g.fillRect(x, padT + plotH - 1 * D, barW, 1 * D);
       } else {

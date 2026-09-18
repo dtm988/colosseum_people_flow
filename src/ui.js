@@ -4,12 +4,12 @@
  * the building lives in the modules this imports.
  */
 
-import { createCrowd, step, sample, metrics, EXIT_T } from './crowd.js?v=b14';
-import { PlanView } from './render.js?v=b14';
-import { ClearanceChart, GateStrip, mmss } from './chart.js?v=b14';
-import { CLAIMS, format, value } from './claims.js?v=b14';
-import { TIERS, WEDGES, PUBLIC_WEDGES, isAxial, heightAt } from './geometry.js?v=b14';
-import { Tour } from './tour.js?v=b14';
+import { createCrowd, step, sample, metrics, EXIT_T } from './crowd.js?v=b15';
+import { PlanView } from './render.js?v=b15';
+import { ClearanceChart, GateStrip, mmss } from './chart.js?v=b15';
+import { CLAIMS, format, value } from './claims.js?v=b15';
+import { TIERS, WEDGES, PUBLIC_WEDGES, isAxial, heightAt } from './geometry.js?v=b15';
+import { Tour } from './tour.js?v=b15';
 
 /**
  * Palette. Two categorical slots for the two exit policies, validated for
@@ -27,14 +27,13 @@ const THEME = {
   axis: '#3a332b',
   agent: '#efe7db',
   gate: '#d8a657',
-  gateShut: '#8c4a3f',
   series: { colosseum: '#3987e5', modern: '#d95926' },
 };
 
 const SPEEDS = [1, 5, 15, 30, 60, 120];
 
 /** Bumped on every deploy, so "which build am I looking at" is never a guess. */
-const BUILD = 'b14';
+const BUILD = 'b15';
 console.log(`[colosseum] build ${BUILD} — tour: click, arrow keys, or Escape`);
 
 const $ = (/** @type {string} */ id) => /** @type {HTMLElement} */ (document.getElementById(id));
@@ -49,7 +48,6 @@ const state = {
   /** @type {'colosseum'|'modern'} */ venue: 'colosseum',
   /** @type {'routed'|'unrouted'} */ mode: 'routed',
   n: 50000,
-  closedCount: 0,
   speed: 30,
   running: false,
   /** @type {ReturnType<typeof createCrowd>|null} */ crowd: null,
@@ -58,38 +56,18 @@ const state = {
   /** @type {number|null} */ selectedWedge: null,
 };
 
-/**
- * Gates are shut as a contiguous arc rather than at random: a blocked sector
- * is what actually happens, and it is the case that hurts a static routing
- * table most - your gate is shut and an assignment has no fallback.
- */
-function closedSet(count) {
-  const s = new Set();
-  let placed = 0;
-  for (let i = 0; placed < count && i < WEDGES; i++) {
-    const w = (12 + i) % WEDGES;
-    if (isAxial(w)) continue;
-    s.add(w);
-    placed++;
-  }
-  return s;
-}
-
 function build() {
-  const closed = closedSet(state.closedCount);
   const c = createCrowd({
     n: state.n,
     seed: state.seed,
     mode: state.mode,
     venue: state.venue,
-    closedGates: [...closed],
   });
   state.crowd = c;
   state.sinceSample = 0;
-  plan.setClosedGates(closed, new Set(c.venue.exits), c.venue.nominalStairW / value('stairWidth'));
-  strip.set(c.gateExits, closed, state.venue);
+  plan.setVenue(new Set(c.venue.exits), c.venue.nominalStairW / value('stairWidth'));
+  strip.set(c.gateExits, state.venue);
   curve.setRun(state.venue, c.history, state.n);
-  showWidthLoss();
   redraw();
 }
 
@@ -264,15 +242,6 @@ for (const r of document.querySelectorAll('input[name=mode]')) {
   });
 }
 
-$('closed').addEventListener('input', (e) => {
-  state.closedCount = Number(/** @type {any} */(e.target).value);
-  $('closedOut').textContent = String(state.closedCount);
-  showWidthLoss();
-  state.running = false;
-  $('run').textContent = 'Run egress';
-  build();
-});
-
 $('crowd').addEventListener('input', (e) => {
   state.n = Number(/** @type {any} */(e.target).value);
   $('crowdOut').textContent = state.n.toLocaleString();
@@ -298,36 +267,16 @@ for (const b of document.querySelectorAll('.scenario')) {
     if (p === 'tour') return;
     tour.stop();
     curve.clearRuns();
-    if (p === 'games') { state.venue = 'colosseum'; state.mode = 'routed'; state.closedCount = 0; }
-    if (p === 'modern') { state.venue = 'modern'; state.mode = 'unrouted'; state.closedCount = 0; }
-    if (p === 'unrouted') { state.venue = 'colosseum'; state.mode = 'unrouted'; state.closedCount = 0; }
+    if (p === 'games') { state.venue = 'colosseum'; state.mode = 'routed'; }
+    if (p === 'modern') { state.venue = 'modern'; state.mode = 'unrouted'; }
+    if (p === 'unrouted') { state.venue = 'colosseum'; state.mode = 'unrouted'; }
     /** @type {HTMLInputElement} */ (document.querySelector(`input[name=mode][value=${state.mode}]`)).checked = true;
     /** @type {HTMLInputElement} */ (document.querySelector(`input[name=venue][value=${state.venue}]`)).checked = true;
-    /** @type {HTMLInputElement} */ ($('closed')).value = String(state.closedCount);
-    $('closedOut').textContent = String(state.closedCount);
     build();
     renderLegend();
     state.running = true;
     $('run').textContent = 'Pause';
   });
-}
-
-/**
- * Shutting gates is not a separate idea from the modern comparison - it is the
- * same axis. One removes the efficiency of each metre of stair; the other
- * removes metres outright. Saying so turns a disaster slider into part of the
- * argument.
- */
-function showWidthLoss() {
-  const el = document.getElementById('widthOut');
-  if (!el) return;
-  const c = state.crowd;
-  if (!c) return;
-  const open = c.openGates.length * c.venue.stairW;
-  const full = c.venue.exits.length * c.venue.stairW;
-  el.textContent = state.closedCount
-    ? `— ${open.toFixed(0)} m of stair left, ${Math.round(100 - (100 * open) / full)}% gone`
-    : '';
 }
 
 function renderLegend() {
@@ -337,7 +286,7 @@ function renderLegend() {
 
 addEventListener('resize', () => {
   plan.resize();
-  if (state.crowd) plan.setClosedGates(closedSet(state.closedCount), new Set(state.crowd.venue.exits));
+  if (state.crowd) plan.setVenue(new Set(state.crowd.venue.exits));
   curve.resize();
   strip.resize();
   redraw();

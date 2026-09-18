@@ -13,18 +13,18 @@
  *   - where queues form and how they interact
  *   - the specific flow the building achieves, which is therefore a genuine
  *     check against the published 1.14 person/s/m rather than an assumption
- *   - how clearance time responds to exit policy and to closed gates
+ *   - how clearance time responds to exit policy and to exit capacity
  *
  * Saying which is which is the point. A model that quietly imposes its own
  * headline result and then reports it as a finding is worthless.
  */
 
-import { value } from './claims.js?v=b14';
+import { value } from './claims.js?v=b15';
 import {
   OUTER, ARENA, WEDGES, WEDGE_ANGLE, TIERS, PUBLIC_WEDGES, AXIAL_WEDGES,
   ellipsePoint, wedgeAngle, descentLength,
-} from './geometry.js?v=b14';
-import { mulberry32, weightedPick, geometricOffset } from './rng.js?v=b14';
+} from './geometry.js?v=b15';
+import { mulberry32, weightedPick, geometricOffset } from './rng.js?v=b15';
 
 // ---------------------------------------------------------------------------
 // Behavioural constants, all traceable to claims.js
@@ -264,7 +264,6 @@ export const EXIT_T = 1.05; // past the outer wall
  * @property {'routed'|'unrouted'} [mode]
  * @property {number} [beta] how sharply distance is weighed, per metre
  * @property {number} [entrySpread] 0 = everyone entered at their own wedge
- * @property {number[]} [closedGates] wedge indices shut before the crowd leaves
  */
 
 /**
@@ -280,9 +279,7 @@ export function createCrowd(opts = {}) {
   const rand = mulberry32(seed);
   const venue = venueOf(opts.venue ?? 'colosseum');
 
-  const closed = new Set(opts.closedGates ?? []);
-  const openGates = venue.exits.filter((w) => !closed.has(w));
-  if (openGates.length === 0) throw new Error('Every gate is closed; nobody can leave.');
+  const openGates = venue.exits.slice();
 
   const stairCellArea = venue.stairW * S_CELL;
   const stairCap = Math.max(1, Math.floor(JAM_DENSITY * stairCellArea));
@@ -356,7 +353,7 @@ export function createCrowd(opts = {}) {
   }
 
   return {
-    n, seed, mode, beta, entrySpread, closed, openGates,
+    n, seed, mode, beta, entrySpread, openGates,
     venue, stairCellArea, stairCap, throatArea, throatCap,
     theta, t, tierIdx, seatWedge, entryWedge, exitWedge, targetTheta, phase,
     tStart, descentLen, travelled,
@@ -415,8 +412,8 @@ function chooseExit(th, tt, entry, openGates, beta, rand) {
   }
 
   if (cand.length === 0) {
-    // Everything nearby is shut and they did not come in by an open gate:
-    // fall back to the genuinely nearest open gate.
+    // Nothing nearby and they did not come in by one of these gates:
+    // fall back to the genuinely nearest.
     let bestG = openGates[0];
     let bestD = Infinity;
     for (const g of openGates) {

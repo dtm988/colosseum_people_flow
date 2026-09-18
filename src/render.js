@@ -12,8 +12,8 @@
 import {
   OUTER, ARENA, WEDGES, WEDGE_ANGLE, TIERS, AXIAL_WEDGES, isAxial,
   ellipsePoint, wedgeAngle,
-} from './geometry.js?v=b14';
-import { EXIT_T } from './crowd.js?v=b14';
+} from './geometry.js?v=b15';
+import { EXIT_T } from './crowd.js?v=b15';
 
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
 /** @param {number} n */
@@ -42,14 +42,13 @@ const TRIG_SCALE = TRIG_N / (Math.PI * 2);
 export class PlanView {
   /**
    * @param {HTMLCanvasElement} canvas
-   * @param {{surface: string, structure: string, structureDim: string, ink: string, muted: string, agent: string, gate: string, gateShut: string}} theme
+   * @param {{surface: string, structure: string, structureDim: string, ink: string, muted: string, agent: string, gate: string}} theme
    */
   constructor(canvas, theme) {
     this.canvas = canvas;
     this.theme = theme;
     this.ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d', { alpha: false }));
     this.dpr = Math.min(2, window.devicePixelRatio || 1);
-    /** @type {Set<number>} */ this.closed = new Set();
     /** @type {Set<number>} */ this.exits = new Set();
     this.gateScale = 1;
     this.showHeat = false;
@@ -151,7 +150,6 @@ export class PlanView {
       const [x, y] = this.px(p.x, p.y);
       const axial = isAxial(w);
       const isExit = this.exits.size === 0 ? !axial : this.exits.has(w);
-      const shut = this.closed.has(w);
       if (axial) {
         // The four reserved arches: the imperial box, the ceremonial gate, and
         // the Porta Libitinaria. Drawn hollow, because nobody ordinary ever
@@ -167,7 +165,7 @@ export class PlanView {
       const r = isExit ? 2.6 * Math.sqrt(this.gateScale) : 1.1;
       g.beginPath();
       g.arc(x, y, r * this.dpr, 0, Math.PI * 2);
-      g.fillStyle = isExit ? (shut ? T.gateShut : T.gate) : T.structureDim;
+      g.fillStyle = isExit ? T.gate : T.structureDim;
       g.fill();
     }
 
@@ -191,12 +189,10 @@ export class PlanView {
   }
 
   /**
-   * @param {Set<number>} closed
    * @param {Set<number>} [exits] which wedges are exits at all
    * @param {number} [gateScale] width of each opening relative to a Roman arch
    */
-  setClosedGates(closed, exits, gateScale) {
-    this.closed = closed;
+  setVenue(exits, gateScale) {
     if (exits) this.exits = exits;
     if (gateScale) this.gateScale = gateScale;
     this.buildStatic();
