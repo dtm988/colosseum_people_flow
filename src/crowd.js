@@ -304,8 +304,9 @@ function chooseExit(th, tt, entry, openGates, beta, rand) {
   let best = -Infinity;
 
   for (const g of openGates) {
-    let d = Math.abs(((g - seatWedgeApprox + WEDGES * 1.5) % WEDGES) - WEDGES / 2);
-    d = WEDGES / 2 - d; // wedge-distance, shortest way round
+    // Wedge-distance the short way round.
+    const raw = (((g - seatWedgeApprox) % WEDGES) + WEDGES) % WEDGES;
+    const d = Math.min(raw, WEDGES - raw);
     if (d > WINDOW && g !== entry) continue;
 
     const walk = Math.abs(angleDelta(th, wedgeAngle(g))) * radius;
