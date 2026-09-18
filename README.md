@@ -6,8 +6,9 @@ An interactive model of how the Flavian Amphitheatre emptied, and why a building
 
 🔗 **[Open the live tool](https://dtm988.github.io/colosseum_people_flow/)** — it opens on a nine-step guided tour.
 
-<!-- A screenshot belongs here before submission: the routed egress at ~5 min,
-     where the eighty separate queues are clearly visible. -->
+![The routed egress partway through: eighty separate queues, one down each stairway](docs/screenshot.png)
+
+*Partway through the egress. Eighty queues, one per wedge, none of them meeting — which is the whole reason the building works.*
 
 ## What you are looking at
 
