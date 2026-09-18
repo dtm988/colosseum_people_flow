@@ -8,7 +8,7 @@ An interactive model of how the Flavian Amphitheatre emptied, and why a building
 
 ![The routed egress partway through: eighty separate queues, one down each stairway](docs/screenshot.png)
 
-*Partway through the egress. Eighty queues, one per wedge, none of them meeting — which is the whole reason the building works.*
+*Three and a half minutes in. Eighty queues, one per wedge, none of them meeting — which is the whole reason the building works. Note the readout on the right: the model's peak stair flow is 1.13 person/s/m against a published 1.14 it never sees.*
 
 ## What you are looking at
 
