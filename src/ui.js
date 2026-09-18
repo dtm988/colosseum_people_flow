@@ -385,14 +385,31 @@ const tour = new Tour($('tour'), {
     /** @type {HTMLInputElement} */ ($('speed')).value = String(SPEEDS.indexOf(x) + 1 || 4);
   },
   highlight(h) { plan.highlight = h; },
-  claims(open) { /** @type {HTMLDetailsElement} */ ($('claimsBox')).open = open; },
+  claims(open) {
+    const box = /** @type {HTMLDetailsElement|null} */ (document.getElementById('claimsBox'));
+    if (box) box.open = open;
+  },
 });
 
-$('tour').addEventListener('click', (e) => {
-  const act = /** @type {HTMLElement} */ (e.target).dataset?.tour;
+// Delegated on the document rather than the card, and matched with closest()
+// rather than by reading dataset off the exact click target - the card rebuilds
+// its own innerHTML on every step, and a click that lands on anything nested
+// inside a button should still count.
+document.addEventListener('click', (e) => {
+  const hit = /** @type {HTMLElement} */ (e.target)?.closest?.('[data-tour]');
+  if (!hit) return;
+  const act = /** @type {HTMLElement} */ (hit).dataset.tour;
   if (act === 'next') tour.next();
   else if (act === 'prev') tour.prev();
   else if (act === 'stop') tour.stop();
+});
+
+// Arrow keys work too, so the tour is navigable without aiming at a button.
+addEventListener('keydown', (e) => {
+  if (!tour.active) return;
+  if (e.key === 'ArrowRight') { tour.next(); e.preventDefault(); }
+  else if (e.key === 'ArrowLeft') { tour.prev(); e.preventDefault(); }
+  else if (e.key === 'Escape') tour.stop();
 });
 
 document.querySelector('.tour-start')?.addEventListener('click', () => tour.start());
