@@ -56,33 +56,114 @@ That last division is the whole credibility of the exercise. The model's peak st
 
 **Exit choice** is a multinomial logit over the available gates: disutility is walking distance plus a familiarity penalty for any gate that is not the one you came in by. The penalty is defined *relative* to the distance coefficient, so changing how sharply people weigh distance never disturbs the measured 71/29 split at equal distance.
 
-## Decisions and tradeoffs
+## Decisions and trade-offs
 
-**Vanilla JavaScript, zero runtime dependencies, no build step.** Not because a toolchain was unavailable — it wasn't — but because of this artifact's lifespan and review context. It is ~2,900 lines, single author, and one of the ways it gets read is source-in-a-browser. A build step means either a committed `dist/` (confusing in exactly that view) or a Pages action that can fail silently between submission and review. `// @ts-check` with JSDoc gives editor-level type safety with none of that. For a codebase with a year and three contributors ahead of it I would use TypeScript without hesitating.
+Almost none of my time went on construction. It went here — on choices where the attractive option and the defensible one pulled in different directions.
 
-**The simulation core is DOM-free.** Nothing in `claims`, `rng`, `geometry` or `crowd` imports anything from the browser, so the same modules run in Node. That is what makes the headless check possible, and it is why determinism is testable at all.
+### 1. Water or people
 
-**A claims registry as the architectural spine.** Every displayed figure goes through `claims.js`, which throws on an unregistered key. Presenting a contested claim as settled becomes structurally impossible rather than a discipline someone has to maintain. This cost about twenty lines and earned its keep twice — see below.
+The trip that prompted this threw up two candidates. The Colosseum moved **water** — aqueduct-fed latrines flushed continuously, a hundred-odd drinking fountains, a great circular drain, and, at the inaugural games, an arena flooded for naval displays. And it moved **people**.
 
-**Deployed as static files on GitHub Pages.** No backend, because nothing needs one and the most common way a take-home dies is a dead demo link on the morning a reviewer opens it. The repo link and the prototype link are the same artifact.
+Water was the better story by a distance. Cassius Dio has Titus "suddenly fill this same theatre with water"; Martial, probably an eyewitness, writes *"here but lately was land… here but lately was sea."* Then Domitian built the hypogeum and flooding became impossible, so the whole spectacle exists in a window of about five years. That is a terrific narrative.
 
-**Physics: path-advected agents with per-cell exclusion at bottlenecks.** A social-force model looks better and can eat an entire budget on force constants. A pure speed-density rule slows people but never stops them entering — mine let stair cells reach 140 people per square metre before I added jam-density exclusion. The combination imports the crowd physics from measurement and lets the queues emerge.
+I cut it, and the reasoning is the one I would most want read. The **quantities** are sourced — roughly 5,600 m³ to flood, Aqua Claudia at 2.12 m³/s, published fill estimates. The **topology is not**: there is no surviving archaeological evidence for the link from the Caelian, and no pipes have been found inside the building. A flow visualisation is nothing *but* topology — where the water enters, which channels carry it, how it drains. Building it would have meant inventing the centrepiece and dressing it as history.
 
-**Two features were cut on evidentiary grounds, and none on time.** That is the tradeoff I would most want a reviewer to notice.
+**Cost:** the more charismatic subject, and the best single fact I had.
+**Why it was right:** people-flow has the opposite profile — the topology is the attested part (arches, numerals, wedge structure) and only the behaviour needs importing from measurement. A tool whose whole posture is "every figure carries its evidence" cannot have an invented centrepiece.
 
-## What the model disproved
+### 2. Front end only, zero dependencies, no build step
 
-The most useful results were the ones that contradicted me.
+A back end was never needed and would have been actively worse. Nothing here requires one: no secrets, no accounts, no data too large to ship, and no precomputation — 50,000 agents run in real time in the browser, so there was **no performance compromise to trade against**. What a server *would* have added is a cold start on the morning a reviewer opens the link, an account in the critical path, and something to keep alive for the weeks between submission and review. The most common way a take-home dies is a dead demo link.
 
-**The project began as a sharding thesis** — "your ticket was a route, not a seat" — arguing that assignment was what made the building fast. Then the model said otherwise: with 80 evenly spaced gates, free choice lands almost exactly where the assignment would have put you. The design does not beat good decision-making; it makes good decision-making unnecessary. Measured over five seeds, run-to-run noise is 8–11s and the policy gap is ~41s, so the effect is real — but **free choice is faster for 95% of the crowd and slower only for the last few.** Assignment buys the tail, not the median. That is a better finding than the one I set out to prove, and the whole framing of the tool moved to accommodate it.
+The same logic extended to tooling. Node was available; I chose not to use it in the shipped artifact. One of the ways this gets read is source-in-a-browser on GitHub, and a build step means either a committed `dist/` (confusing in exactly that view) or a Pages action that can fail quietly between submission and review. `// @ts-check` with JSDoc gives editor-level type safety with none of that.
 
-**The water act was planned and cut.** The Colosseum was aqueduct-fed, and at the inaugural games the arena was flooded for naval displays — Cassius Dio says Titus "suddenly filled this same theatre with water." The *quantities* are sourced: ~5,600 m³, Aqua Claudia at 2.12 m³/s. The *topology* is not — no archaeological evidence survives for the link from the Caelian, and no pipes have been found inside the building. A flow visualisation is nothing but topology, so the centrepiece would have had to be invented. The claims registry had no tier to put it in, which is how I knew to cut it.
+**Cost:** no server-side persistence, no shared state, and hand-rolled charts instead of a library.
+**Bought:** repo link and prototype link are the same artifact, and there is no runtime that can fail.
+**Where I'd decide differently:** a codebase with a year and three contributors ahead of it gets TypeScript without hesitation. This is ~2,900 lines with one author and a review window.
 
-**My first modern-arena comparison was the Colosseum against itself with bigger doors.** Holding total exit width equal and redistributing it across 8 exits produced no penalty at all — because that synthetic building kept Roman flow efficiency. The negative result was true but empty: *arrangement does not matter if you hold efficiency constant.* The fix was to stop inventing the modern venue and import its measured efficiency instead.
+### 3. An explainer that operates the model, rather than narrating beside it
 
-**A code review found a bug in the headline comparison.** An earlier concourse model binned *seated* spectators into the corridor from the first step, penalising the modern building before anyone had reached a merging point. Removing it, the comparison survived (9m45 vs 9m12) — so the result was real, but it had been partly resting on an artifact.
+Once the simulation worked it was still illegible. Someone arriving cold sees an ellipse and some moving dots, and the assignment is explicitly about helping people *learn* something.
 
-**And one in my process.** The same review found that a commit did not contain the change its message described: a patch script had edited a file in memory and never written it, and I had "verified" the change by reading my own script's output.
+Two bad options presented themselves. A **sandbox** with controls and no guidance teaches a reviewer with three minutes nothing. A **canned walkthrough** — scripted animation, prerecorded states — teaches, but denies the discovery that makes it land, and quietly stops being a simulation at all.
+
+The resolution was that every tour step drives **the same controls a visitor can drive themselves**. There is no scripted animation anywhere in the tool; each step sets up the real model, points at one part of the building, and says what is about to happen. You can leave at any step and keep playing with what is on screen, because what is on screen is just the tool.
+
+The detail I would defend hardest is the **"watch for this" line** on each step that runs. Telling someone what to look for *before* it happens is the difference between a demo and an explanation — after the fact it is just a caption.
+
+**Cost:** roughly a fifth of the build, and the card covers part of the plan.
+**Bought:** the thing the brief actually asks for. A simulation a stranger cannot read is a screensaver.
+
+### 4. A claims registry as the architectural spine
+
+Every figure the tool displays goes through one module that pairs it with an evidence tier, and `claim()` throws on an unregistered key. Presenting a contested number as settled becomes structurally impossible rather than a discipline I have to keep remembering at 1 a.m.
+
+**Cost:** indirection on every displayed value, and about twenty lines.
+**Bought:** it caught things. The water act died because its channel topology had no tier to put it in — the registry asked a question I could not answer. It is also why the tool can say out loud that the famous fifteen-minute figure is **unsourced**, which is a claim most explainers of this building quietly launder into fact.
+
+### 5. Which crowd physics
+
+Three options, and the most impressive one was the wrong one.
+
+- **Social-force model** — the most convincing crowd visually, and a genuine risk of spending the entire budget on force constants and instability.
+- **Floor-field cellular automaton** — the evacuation literature's standard; jamming emerges from cell exclusion, but its emergent fundamental diagram needs calibrating against the measured curve, which is its own project.
+- **Path-advected agents on a measured speed-density curve, with per-cell exclusion at the bottlenecks** — what I built.
+
+The deciding argument was not effort, it was what I would be able to *claim*. With the third option I can say precisely: the physics is imported from roughly 35,000 observations, and the queues are emergent. A lattice rule that produces a plausible-*looking* jam is not evidence about this building, and claiming emergence you did not earn is exactly the sort of thing the people reading this submission notice.
+
+It also needed correcting twice in flight. A pure speed-density rule slows people but never stops them entering, so stair cells were reaching **140 people per square metre** and reporting flow rates the physics cannot deliver; jam-density exclusion fixed that. And an earlier version applied a stair slowdown *on top of* the density curve, double-counting it and capping stairs at half their real capacity.
+
+### 6. What the tool is *about*: assigned exits, or stair efficiency
+
+This project started as a sharding thesis. The tagline was *"your ticket was a route, not a seat"* — the argument being that pre-assigned exits were what made the building fast, which is a lovely systems story about static routing beating runtime scheduling.
+
+**The model disproved it.** With 80 evenly spaced gates, letting people choose freely lands them almost exactly where the assignment would have. There is no dramatic gap to show, because the design *encodes* the choice a well-informed crowd would make anyway.
+
+What replaced it came out of the literature: the Colosseum achieves **1.14 person/s/m** on a 2.8 m stair where a modern arena manages **0.80** on a 4.0 m one. Same people per second, thirty percent less stair. Across a building that compounds into 42% more staircase needed to match.
+
+**Cost:** the duller headline. "Static routing beats dynamic scheduling" is a better soundbite than "flow efficiency per metre of stair," and I had already written the tagline, the tour copy, and half the framing around it.
+**Why it was right:** it is the claim the evidence actually supports, and it is *more* surprising once stated — the building would fail a modern egress code and clears in a comparable time anyway.
+
+There was a second, subtler version of the same error. My first modern-arena comparison redistributed the Colosseum's own geometry into eight big exits and found **no difference at all** — because that synthetic building kept Roman flow efficiency. I had built the Colosseum against itself with bigger doors. The fix was to stop inventing the modern venue and **import its measured efficiency**, applied as effective width. Importing a measured parameter and computing its consequence is a different act from assuming the answer, and the distinction is the difference between a result and a circular one.
+
+### 7. Keeping the assignment toggle anyway
+
+Having demoted assignment from the thesis, the honest question was whether to delete the control. I measured it over five seeds instead of arguing about it: run-to-run noise is 8–11 s and the policy gap is ~41 s, so the effect is real. But it sits somewhere unexpected:
+
+| | median out | 95% out | last out |
+|---|---|---|---|
+| assigned | 5m 47s | 8m 20s | **9m 12s** |
+| free choice | **4m 56s** | **7m 39s** | 10m 49s |
+
+Free choice is faster for 95% of the crowd and slower only for the last few percent. **Assignment does not buy speed; it buys the tail.** That is p50 versus p99, and it is a more interesting property than the one I set out to prove — so the control stays, relabelled to ask the question it actually answers.
+
+### 8. Cutting the gates-shut control
+
+I built a control that closed arcs of gates, and it produced striking numbers — a quarter less stair costs 3.3× the clearance time, and under damage the rigid assignment becomes a liability. Genuinely interesting, and I cut it.
+
+There is no evidence the Colosseum ever ran with gates shut. It was a disaster scenario wearing an explainer's clothes: a fact about egress capacity in general rather than about this building, sitting in a tool that exists to explain this building. The nonlinearity survives in prose here, where it costs the reader nothing.
+
+**Two features cut on evidentiary grounds, none on time.** That is the sentence I would most want a reviewer to take from this document.
+
+### 9. Debugging a control that did nothing
+
+The tour's Next button appeared dead, and it took three rounds to find. The wrong theories were cache staleness and a canvas overlapping the button — both plausible, both wrong. The actual cause: a careless string replace had matched `requestAnimationFrame(frame);`, which appears *inside* `frame()` itself, and injected the initialisation block into the render loop. `tour.start()` was running sixty times a second. Every click worked and was undone about sixteen milliseconds later.
+
+The reason it survived three rounds is the part worth recording. I was inspecting the page through an automation tab, and **browsers suspend `requestAnimationFrame` in backgrounded tabs** — so the loop containing the bug never ran on my side. `elementFromPoint` said the button was on top; a `MutationObserver` counted zero mutations; a synthetic click advanced the tour. Every measurement was correct, and every one was of a page that could not exhibit the defect. It was solved by a human looking at the inspector and saying *"the aside appears to be recreating itself many times a second."*
+
+Three things changed as a result, and I would keep all of them:
+
+- **Never rebuild interactive DOM inside a render loop.** A button replaced between mousedown and mouseup never fires a click at all. The card is now built once and only its text swapped, so the failure is structurally impossible. The metrics panel had the same defect and got the same fix.
+- **A visible build stamp**, because two of those rounds were spent not knowing which build was in the browser — plus a `validate.js` check that the version agrees across every file, turning the manual step that caused a lost edit into a tested invariant.
+- **A fault banner**, because a control that silently does nothing is the worst failure a tool can have: it reads as a design decision rather than a bug.
+
+**The transferable lesson:** treat "works for me" as near-zero evidence when your environment cannot execute the code path in question, and ask the person who *can* see it to look, early.
+
+### 10. Commissioning a review I might not like
+
+With the tool working, I ran a full review pass over the implementation rather than calling it done. It found eight issues. Two mattered: a concourse model that penalised the modern arena with a start-up artifact **inside the headline comparison**, and a commit that did not contain the change its message described — a patch script had edited a file in memory and never written it, and I had "verified" the change by reading the script's own output.
+
+The comparison survived removing the artifact (9m45 against 9m12), so the finding was real — but part of it had been resting on a bug. I would rather know that before a reviewer does.
 
 ## Known limitations, stated rather than hidden
 
