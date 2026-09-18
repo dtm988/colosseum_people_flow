@@ -170,16 +170,36 @@ figcaption { color: var(--muted); font-size: 0.76rem; display: flex; gap: 0.7rem
 /* ---- guided tour ---- */
 
 .tour {
-  position: absolute;
+  /* Fixed to the viewport, not to the stage.
+     As an absolutely-positioned child of .stage this card depended on the
+     stage's box: on a short window it overflowed, and the lower half - the
+     Back and Next buttons - ended up underneath a canvas, visible but
+     unclickable. Anchoring to the viewport removes the dependency entirely,
+     and the max-height keeps it clear of the charts below. */
+  position: fixed;
   left: 1rem;
-  bottom: 2.4rem;
-  width: min(25rem, calc(100% - 2rem));
-  background: rgba(20, 17, 14, 0.94);
+  top: 5.4rem;
+  z-index: 40;
+  width: min(25rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 14rem);
+  overflow-y: auto;
+  background: rgba(20, 17, 14, 0.96);
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0.85rem 0.95rem 0.9rem;
   backdrop-filter: blur(6px);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+}
+
+/* The stage owns its own stacking context so the card inside it cannot be
+   overtaken by anything painted later in the document. */
+
+/* Keep the controls reachable even when the body text has to scroll. */
+.tour-nav {
+  position: sticky;
+  bottom: 0;
+  background: rgba(20, 17, 14, 0.94);
+  padding-top: 0.4rem;
 }
 
 .tour-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; }
