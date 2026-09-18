@@ -146,8 +146,11 @@ export const STEPS = [
            stair carries 3.20. <b>A stair thirty percent narrower does the same work.</b>
            Merging, turning, retail, and the general furniture of a commercial arena mean only
            about 70% of a modern opening carries flow at all.
-           <br><br>Across a whole building that compounds: to match the Colosseum, a modern arena
-           needs about <b>42% more staircase</b>.`,
+           <br><br>Across a whole building that compounds. Turn it round and it is the claim
+           this tool exists to make: <b>the Colosseum empties as fast as a modern arena on about
+           thirty percent less staircase</b> — and the reason is everything you watched in the
+           first half, that no two routes share a corridor, so every metre of stair runs at
+           close to its theoretical maximum.`,
     setup: (api) => {
       api.highlight(null);
       api.run(false);

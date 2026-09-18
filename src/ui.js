@@ -4,12 +4,12 @@
  * the building lives in the modules this imports.
  */
 
-import { createCrowd, step, sample, metrics, EXIT_T } from './crowd.js?v=b15';
-import { PlanView } from './render.js?v=b15';
-import { ClearanceChart, GateStrip, mmss } from './chart.js?v=b15';
-import { CLAIMS, format, value } from './claims.js?v=b15';
-import { TIERS, WEDGES, PUBLIC_WEDGES, isAxial, heightAt } from './geometry.js?v=b15';
-import { Tour } from './tour.js?v=b15';
+import { createCrowd, step, sample, metrics, EXIT_T } from './crowd.js?v=b16';
+import { PlanView } from './render.js?v=b16';
+import { ClearanceChart, GateStrip, mmss } from './chart.js?v=b16';
+import { CLAIMS, format, value } from './claims.js?v=b16';
+import { TIERS, WEDGES, PUBLIC_WEDGES, isAxial, heightAt } from './geometry.js?v=b16';
+import { Tour } from './tour.js?v=b16';
 
 /**
  * Palette. Two categorical slots for the two exit policies, validated for
@@ -33,7 +33,7 @@ const THEME = {
 const SPEEDS = [1, 5, 15, 30, 60, 120];
 
 /** Bumped on every deploy, so "which build am I looking at" is never a guess. */
-const BUILD = 'b15';
+const BUILD = 'b16';
 console.log(`[colosseum] build ${BUILD} — tour: click, arrow keys, or Escape`);
 
 const $ = (/** @type {string} */ id) => /** @type {HTMLElement} */ (document.getElementById(id));
