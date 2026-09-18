@@ -1,0 +1,10 @@
+{
+  "name": "colosseum-people-flow",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "How 50,000 people left the Flavian Amphitheatre, and what happens when you take the routing away.",
+  "scripts": {
+    "validate": "node validate.js"
+  }
+}

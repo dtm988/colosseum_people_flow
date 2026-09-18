@@ -63,6 +63,31 @@ export const CLAIMS = {
     note: 'Surviving carved entrance numerals. Restoration also recovered the original red paint - iron oxide and clay, roughly 13 in tall.',
     src: 'Wikipedia; Smithsonian',
   },
+  gateWidth: {
+    value: 4.2, unit: 'm', tier: 'attested',
+    note: 'Each ground-level arch is 4.2 m wide and 7.05 m tall.',
+    src: 'Brewminate',
+  },
+  outerHeight: {
+    value: 48, unit: 'm', tier: 'attested',
+    note: 'Height of the outer wall. The cavea rises with it, so the cheapest seats were also the highest - and the furthest from the street.',
+    src: 'Wikipedia, Colosseum',
+  },
+  podiumHeight: {
+    value: 5, unit: 'm', tier: 'inferred',
+    note: 'Height of the podium above the arena floor, where the senators sat. Sources give figures around 4-5 m for the arena wall.',
+    src: 'multiple',
+  },
+  stairCapacity: {
+    value: 1.1, unit: 'person/s/m', tier: 'inferred',
+    note: 'Maximum specific flow on descending stairs. The level-ground curve peaks near 1.4 p/s/m; stairs run lower. This model uses a stair factor placing the peak near 1.1, within the usual published range - chosen from the stair literature, not fitted to this building\'s clearance time.',
+    src: 'pedestrian flow literature',
+  },
+  stairWidth: {
+    value: 2.8, unit: 'm', tier: 'inferred',
+    note: 'Colosseum stairs modelled at 2.8 m, against 4.0 m for the modern stadium compared with it - narrower, and still the faster of the two.',
+    src: 'Fire (MDPI) 2022',
+  },
   prefabricated: {
     value: 'standardised parts', tier: 'inferred',
     note: 'Interchangeable stairs and seats built in workshops and brought to site - the same modularity that speeds egress also sped construction.',
@@ -111,6 +136,21 @@ export const CLAIMS = {
     value: 0.27, unit: 'm/s', tier: 'attested',
     note: 'Speed at 4.5 p/m^2. Stagnation sets in around 4 p/m^2; some movement remains possible even at 7.4 p/m^2.',
     src: 'Kholshevnikov & Samoshin',
+  },
+  stairSpeed: {
+    value: 0.6, unit: 'm/s', tier: 'inferred',
+    note: 'Free descent speed on stairs, against 1.3 m/s on the level. A modelling choice within the usual range, not a measurement of this building.',
+    src: 'pedestrian flow literature',
+  },
+  familiarExitBias: {
+    value: 71, unit: '%', tier: 'attested',
+    note: 'Offered two exits at equal distance, about 71% of people chose the one they had entered by. A separate study of lecture theatre evacuations found 72% leaving by the familiar main entrance. The effect strengthens when neighbours do the same - and familiar-group participants were measurably less likely to even notice the alternative.',
+    src: 'Exit familiarity & neighbour behaviour (2016); IAFSS lecture theatres',
+  },
+  familiarityIsEmergency: {
+    value: 'emergency studies', tier: 'contested',
+    note: 'The familiarity findings come from emergency evacuations. This model is of ordinary end-of-show dispersal. The bias should hold or strengthen when nobody is hurrying, but that is inference rather than evidence.',
+    src: '-',
   },
 
   // ---- water (epilogue card only - no simulation) -----------------------

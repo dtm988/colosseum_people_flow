@@ -183,5 +183,31 @@ export function tierAt(t) {
   return TIERS[TIERS.length - 1];
 }
 
+/**
+ * Height of the seating above the arena floor, metres.
+ *
+ * This is the dimension a plan view hides, and hiding it inverts the story:
+ * from directly overhead the wooden gallery looks *closest* to the outer wall
+ * and therefore closest to the street. In fact it sat some forty metres up.
+ * Rank set your tier, tier set your height, and height was most of your
+ * journey home.
+ *
+ * @param {number} t
+ */
+export function heightAt(t) {
+  const podium = value('podiumHeight');
+  return podium + (value('outerHeight') - podium) * t;
+}
+
+/**
+ * Length of the descent from a seat at depth `t` to the street: the
+ * horizontal run out to the wall and the vertical drop, together.
+ * @param {number} t
+ * @param {number} radialRun horizontal distance from t to the outer wall
+ */
+export function descentLength(t, radialRun) {
+  return Math.hypot(radialRun, heightAt(t));
+}
+
 /** Bounding box of the whole structure, for fitting the view. */
 export const BOUNDS = { minX: -OUTER.a, maxX: OUTER.a, minY: -OUTER.b, maxY: OUTER.b };
