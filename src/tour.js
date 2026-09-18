@@ -174,6 +174,41 @@ export class Tour {
     this.el = el;
     this.api = api;
     this.i = -1;
+
+    // The card is built ONCE and its text swapped per step.
+    //
+    // It used to rebuild its own innerHTML on every render, which destroys and
+    // recreates the buttons. A button that is replaced between mousedown and
+    // mouseup never fires a click at all - so the control looked present and
+    // did nothing, while a synthetic click in a console worked fine. Keeping
+    // the nodes alive makes that impossible by construction.
+    el.innerHTML = `
+      <div class="tour-head">
+        <span class="tour-count"></span>
+        <button class="tour-skip" data-tour="stop">Skip tour</button>
+      </div>
+      <h2></h2>
+      <div class="tour-body"></div>
+      <p class="tour-watch" hidden></p>
+      <div class="tour-nav">
+        <button data-tour="prev">Back</button>
+        <button class="primary" data-tour="next">Next</button>
+      </div>`;
+
+    this.$count = /** @type {HTMLElement} */ (el.querySelector('.tour-count'));
+    this.$title = /** @type {HTMLElement} */ (el.querySelector('h2'));
+    this.$body = /** @type {HTMLElement} */ (el.querySelector('.tour-body'));
+    this.$watch = /** @type {HTMLElement} */ (el.querySelector('.tour-watch'));
+    this.$prev = /** @type {HTMLButtonElement} */ (el.querySelector('[data-tour="prev"]'));
+    this.$next = /** @type {HTMLButtonElement} */ (el.querySelector('[data-tour="next"]'));
+
+    // Bound directly to nodes that now outlive every step, so navigation does
+    // not depend on event delegation reaching a moving target.
+    this.$next.addEventListener('click', () => this.next());
+    this.$prev.addEventListener('click', () => this.prev());
+    /** @type {HTMLElement} */ (el.querySelector('[data-tour="stop"]')).addEventListener('click', () => this.stop());
+
+    el.hidden = true;
   }
 
   get active() { return this.i >= 0; }
@@ -191,6 +226,7 @@ export class Tour {
 
   /** @param {number} i */
   go(i) {
+    if (i === this.i) return;
     this.i = i;
     const s = STEPS[i];
     s.setup(this.api);
@@ -201,17 +237,12 @@ export class Tour {
     const s = STEPS[this.i];
     if (!s) return;
     this.el.hidden = false;
-    this.el.innerHTML = `
-      <div class="tour-head">
-        <span class="tour-count">${this.i + 1} / ${STEPS.length}</span>
-        <button class="tour-skip" data-tour="stop">Skip tour</button>
-      </div>
-      <h2>${s.title}</h2>
-      <p>${s.body}</p>
-      ${s.watch ? `<p class="tour-watch">${s.watch}</p>` : ''}
-      <div class="tour-nav">
-        <button data-tour="prev" ${this.i === 0 ? 'disabled' : ''}>Back</button>
-        <button class="primary" data-tour="next">${this.i === STEPS.length - 1 ? 'Explore it yourself' : 'Next'}</button>
-      </div>`;
+    this.$count.textContent = `${this.i + 1} / ${STEPS.length}`;
+    this.$title.textContent = s.title;
+    this.$body.innerHTML = s.body;
+    this.$watch.hidden = !s.watch;
+    if (s.watch) this.$watch.textContent = s.watch;
+    this.$prev.disabled = this.i === 0;
+    this.$next.textContent = this.i === STEPS.length - 1 ? 'Explore it yourself' : 'Next';
   }
 }

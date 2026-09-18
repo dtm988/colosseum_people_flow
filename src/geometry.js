@@ -12,7 +12,7 @@
  * simplification of one - the tiers genuinely do rise as they recede.
  */
 
-import { value } from './claims.js?v=b9';
+import { value } from './claims.js?v=b10';
 
 /** Half-dimensions of the outer wall, metres. */
 export const OUTER = { a: value('outerLength') / 2, b: value('outerWidth') / 2 };

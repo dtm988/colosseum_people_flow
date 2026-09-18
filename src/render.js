@@ -12,8 +12,8 @@
 import {
   OUTER, ARENA, WEDGES, WEDGE_ANGLE, TIERS, AXIAL_WEDGES, isAxial,
   ellipsePoint, wedgeAngle,
-} from './geometry.js?v=b9';
-import { EXIT_T } from './crowd.js?v=b9';
+} from './geometry.js?v=b10';
+import { EXIT_T } from './crowd.js?v=b10';
 
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
 /** @param {number} n */

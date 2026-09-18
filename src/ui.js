@@ -4,12 +4,12 @@
  * the building lives in the modules this imports.
  */
 
-import { createCrowd, step, sample, metrics, EXIT_T } from './crowd.js?v=b9';
-import { PlanView } from './render.js?v=b9';
-import { ClearanceChart, GateStrip, mmss } from './chart.js?v=b9';
-import { CLAIMS, format, value } from './claims.js?v=b9';
-import { TIERS, WEDGES, PUBLIC_WEDGES, isAxial, heightAt } from './geometry.js?v=b9';
-import { Tour } from './tour.js?v=b9';
+import { createCrowd, step, sample, metrics, EXIT_T } from './crowd.js?v=b10';
+import { PlanView } from './render.js?v=b10';
+import { ClearanceChart, GateStrip, mmss } from './chart.js?v=b10';
+import { CLAIMS, format, value } from './claims.js?v=b10';
+import { TIERS, WEDGES, PUBLIC_WEDGES, isAxial, heightAt } from './geometry.js?v=b10';
+import { Tour } from './tour.js?v=b10';
 
 /**
  * Palette. Two categorical slots for the two exit policies, validated for
@@ -34,7 +34,7 @@ const THEME = {
 const SPEEDS = [1, 5, 15, 30, 60, 120];
 
 /** Bumped on every deploy, so "which build am I looking at" is never a guess. */
-const BUILD = 'b9';
+const BUILD = 'b10';
 console.log(`[colosseum] build ${BUILD} — tour: click, arrow keys, or Escape`);
 
 const $ = (/** @type {string} */ id) => /** @type {HTMLElement} */ (document.getElementById(id));
@@ -105,9 +105,16 @@ function tile(label, val, sub = '') {
   return `<div class="tile"><span class="tl">${label}</span><span class="tv">${val}</span>${sub ? `<span class="ts">${sub}</span>` : ''}</div>`;
 }
 
-function renderMetrics() {
+let _lastMetrics = 0;
+function renderMetrics(force = false) {
   const c = state.crowd;
   if (!c) return;
+  // Four times a second is plenty for a readout, and rewriting a panel of DOM
+  // on every frame is both wasteful and a good way to make anything inside it
+  // unclickable.
+  const now = performance.now();
+  if (!force && now - _lastMetrics < 250) return;
+  _lastMetrics = now;
   const m = metrics(c);
   const pct = ((c.evacuated / c.n) * 100).toFixed(0);
   const published = Number(CLAIMS.egressPublished.value);
