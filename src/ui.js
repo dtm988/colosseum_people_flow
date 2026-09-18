@@ -363,6 +363,27 @@ window.colosseum = {
   },
 };
 
+/**
+ * Surface faults instead of dying quietly.
+ *
+ * A control that does nothing when clicked is the worst failure a tool can
+ * have: it looks like a design decision. If something throws, say so on screen.
+ */
+function showFault(message) {
+  let el = document.getElementById('fault');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'fault';
+    el.className = 'fault';
+    document.body.appendChild(el);
+  }
+  el.textContent = message;
+  el.hidden = false;
+}
+
+addEventListener('error', (e) => showFault(`${e.message} (${(e.filename || '').split('/').pop()}:${e.lineno})`));
+addEventListener('unhandledrejection', (e) => showFault(`Unhandled: ${e.reason}`));
+
 // --- guided tour -----------------------------------------------------------
 
 const tour = new Tour($('tour'), {
@@ -399,9 +420,14 @@ document.addEventListener('click', (e) => {
   const hit = /** @type {HTMLElement} */ (e.target)?.closest?.('[data-tour]');
   if (!hit) return;
   const act = /** @type {HTMLElement} */ (hit).dataset.tour;
-  if (act === 'next') tour.next();
-  else if (act === 'prev') tour.prev();
-  else if (act === 'stop') tour.stop();
+  try {
+    if (act === 'next') tour.next();
+    else if (act === 'prev') tour.prev();
+    else if (act === 'stop') tour.stop();
+  } catch (err) {
+    showFault(`Tour step failed: ${err && err.message ? err.message : err}`);
+    throw err;
+  }
 });
 
 // Arrow keys work too, so the tour is navigable without aiming at a button.

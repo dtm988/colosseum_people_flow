@@ -208,3 +208,19 @@ figcaption { color: var(--muted); font-size: 0.76rem; display: flex; gap: 0.7rem
 @media (max-width: 900px) {
   .tour { position: static; width: auto; margin: 0.6rem; }
 }
+
+.fault {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  z-index: 99;
+  max-width: 44rem;
+  background: #2a1512;
+  border: 1px solid #8c4a3f;
+  color: #f0c4b8;
+  border-radius: 6px;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.8rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
