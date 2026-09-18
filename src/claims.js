@@ -83,6 +83,16 @@ export const CLAIMS = {
     note: 'Maximum specific flow on descending stairs. The level-ground curve peaks near 1.4 p/s/m; stairs run lower. This model uses a stair factor placing the peak near 1.1, within the usual published range - chosen from the stair literature, not fitted to this building\'s clearance time.',
     src: 'pedestrian flow literature',
   },
+  modernExits: {
+    value: 8, unit: 'grand exits', tier: 'modeled',
+    note: 'A thought experiment, not a real stadium: the same total exit width the Colosseum has, gathered into eight grand exits instead of spread across seventy-six small ones. It isolates how capacity is DISTRIBUTED from how much of it there is - the two buildings can move the same number of people per second, and only the shape of the route differs.',
+    src: 'this model',
+  },
+  concourseWidth: {
+    value: 12, unit: 'm', tier: 'modeled',
+    note: 'Width of the shared concourse ring in the modern comparison. The Colosseum has none - each wedge runs seat to stair to arch with no shared horizontal circulation, so paths from different wedges never meet inside the building. This width is an assumption, and it is the single most consequential one in the comparison.',
+    src: 'this model',
+  },
   stairWidth: {
     value: 2.8, unit: 'm', tier: 'inferred',
     note: 'Colosseum stairs modelled at 2.8 m, against 4.0 m for the modern stadium compared with it - narrower, and still the faster of the two.',

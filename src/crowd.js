@@ -35,8 +35,8 @@ const V_JAM = value('jamSpeed');          // 0.27 m/s at 4.5 p/m^2
 const D_FREE = 0.2;                       // density below which nobody is impeded
 const D_JAM = 4.5;
 const V_FLOOR = 0.05;                     // nothing deadlocks completely
-const STAIR_W = value('stairWidth');
-const GATE_W = value('gateWidth');
+const STAIR_W = value('stairWidth');      // per stair, in the real building
+const GATE_W = value('gateWidth');        // per arch, in the real building
 const STAIR_FREE = value('stairSpeed');   // 0.6 m/s descending, unimpeded
 
 /**
@@ -130,9 +130,14 @@ for (let j = 0; j < T_BINS; j++) {
  * size, so density means the same thing everywhere and specific flow cannot
  * exceed what the speed-density curve allows.
  */
+/** Arc length of one angular bin at concourse depth, for the shared-ring case. */
+const CONCOURSE_ARC = new Float32Array(THETA_BINS);
+for (let i = 0; i < THETA_BINS; i++) {
+  CONCOURSE_ARC[i] = RADIUS[Math.floor(0.85 * T_BINS) * THETA_BINS + i] * D_THETA;
+}
+
 const S_CELL = 1.5;                      // metres of stair per cell
 const S_BINS = 64;                       // covers 96 m of descent
-const STAIR_CELL_AREA = STAIR_W * S_CELL;
 const sBin = (/** @type {number} */ s) => Math.min(S_BINS - 1, Math.max(0, Math.floor(s / S_CELL)));
 
 /**
@@ -145,7 +150,6 @@ const sBin = (/** @type {number} */ s) => Math.min(S_BINS - 1, Math.max(0, Math.
  * itself, 4.2 m wide, shared by everyone leaving through that gate.
  */
 const THROAT_M = 3;
-const THROAT_AREA = GATE_W * THROAT_M;
 
 /**
  * Jam density - the point at which a cell is physically full.
@@ -159,8 +163,58 @@ const THROAT_AREA = GATE_W * THROAT_M;
  * The speed curve is imported from measurement; the queues are emergent.
  */
 const JAM_DENSITY = 6;
-const STAIR_CAP = Math.max(1, Math.floor(JAM_DENSITY * STAIR_CELL_AREA));
-const THROAT_CAP = Math.max(1, Math.floor(JAM_DENSITY * THROAT_AREA));
+
+/**
+ * A venue is defined by how its exit capacity is DISTRIBUTED, not how much of
+ * it there is. Both venues below have the same total stair width and the same
+ * total arch width; they can pass the same number of people per second. The
+ * only difference is whether that capacity is spread across seventy-six
+ * routes or gathered into eight.
+ *
+ * That is the architectural question the Colosseum answers, and it is the
+ * comparison the published stadium study makes - narrower stairs than a modern
+ * arena, and more people per second across them.
+ *
+ * @param {'colosseum'|'modern'} kind
+ */
+export function venueOf(kind) {
+  const totalStair = PUBLIC_WEDGES.length * STAIR_W;
+  const totalGate = PUBLIC_WEDGES.length * GATE_W;
+
+  // The real difference between the two buildings is not how much exit
+  // capacity they have - held equal here - but whether people share a corridor
+  // on the way to it.
+  //
+  // In the Colosseum a spectator goes from seat to stair to arch inside one
+  // wedge. There is no shared horizontal circulation at all: paths from
+  // different wedges never meet until they are outside the building. A modern
+  // arena gathers everyone into a concourse ring first, and that ring is where
+  // flows merge and density accumulates.
+  //
+  // This is modelled, not measured, and the width is an assumption the tool
+  // shows rather than hides.
+  if (kind === 'modern') {
+    const count = value('modernExits');
+    const stride = WEDGES / count;
+    // Offset by half a stride so the grand exits do not land on the four axial
+    // arches, which were never public in the first place.
+    const exits = Array.from({ length: count }, (_, i) => Math.round(i * stride + stride / 2) % WEDGES);
+    return {
+      kind, exits,
+      stairW: totalStair / exits.length,
+      gateW: totalGate / exits.length,
+      concourseWidth: value('concourseWidth'),
+      label: `${exits.length} grand exits`,
+    };
+  }
+  return {
+    kind, exits: PUBLIC_WEDGES.slice(),
+    stairW: STAIR_W,
+    gateW: GATE_W,
+    concourseWidth: 0,   // no shared horizontal circulation at all
+    label: `${PUBLIC_WEDGES.length} numbered gates`,
+  };
+}
 
 const thetaBin = (/** @type {number} */ th) => {
   let i = Math.floor(th / D_THETA) % THETA_BINS;
@@ -209,10 +263,29 @@ export function createCrowd(opts = {}) {
   const beta = opts.beta ?? 0.05;
   const entrySpread = opts.entrySpread ?? (mode === 'routed' ? 0.35 : 0.2);
   const rand = mulberry32(seed);
+  const venue = venueOf(opts.venue ?? 'colosseum');
 
   const closed = new Set(opts.closedGates ?? []);
-  const openGates = PUBLIC_WEDGES.filter((w) => !closed.has(w));
+  const openGates = venue.exits.filter((w) => !closed.has(w));
   if (openGates.length === 0) throw new Error('Every gate is closed; nobody can leave.');
+
+  const stairCellArea = venue.stairW * S_CELL;
+  const stairCap = Math.max(1, Math.floor(JAM_DENSITY * stairCellArea));
+  const throatArea = venue.gateW * THROAT_M;
+  const throatCap = Math.max(1, Math.floor(JAM_DENSITY * throatArea));
+
+  // Nearest open exit to each wedge, precomputed once.
+  const nearestExit = new Uint16Array(WEDGES);
+  for (let w = 0; w < WEDGES; w++) {
+    let best = openGates[0];
+    let bestD = Infinity;
+    for (const g of openGates) {
+      const raw = (((g - w) % WEDGES) + WEDGES) % WEDGES;
+      const d = Math.min(raw, WEDGES - raw);
+      if (d < bestD) { bestD = d; best = g; }
+    }
+    nearestExit[w] = best;
+  }
 
   /**
    * Where people came in.
@@ -221,7 +294,9 @@ export function createCrowd(opts = {}) {
    *   unrouted - funnelled through a handful of grand entrances, the way a
    *              modern venue works. Seats are unchanged; only arrival differs.
    */
-  const mainEntrances = AXIAL_WEDGES.map((w) => (w + 1) % WEDGES); // flanking the reserved axial arches
+  const mainEntrances = venue.kind === 'modern'
+    ? openGates.slice()                                  // the grand exits are the way in, too
+    : AXIAL_WEDGES.map((w) => (w + 1) % WEDGES);         // flanking the reserved axial arches
 
   const theta = new Float32Array(n);
   const t = new Float32Array(n);
@@ -249,7 +324,12 @@ export function createCrowd(opts = {}) {
 
     let entry;
     if (mode === 'routed') {
-      entry = (w + geometricOffset(entrySpread, rand) + WEDGES) % WEDGES;
+      // They came in where their seat says they came in - give or take the
+      // latecomers, the groups meeting up, and the ones who arrived from the
+      // wrong side of the city.
+      const base = nearestExit[w];
+      const idx = openGates.indexOf(base) + geometricOffset(entrySpread, rand);
+      entry = openGates[((idx % openGates.length) + openGates.length) % openGates.length];
     } else {
       const base = mainEntrances[Math.floor(rand() * mainEntrances.length)];
       entry = (base + geometricOffset(entrySpread, rand) + WEDGES) % WEDGES;
@@ -262,15 +342,18 @@ export function createCrowd(opts = {}) {
 
   return {
     n, seed, mode, beta, entrySpread, closed, openGates,
+    venue, stairCellArea, stairCap, throatArea, throatCap,
     theta, t, tierIdx, seatWedge, entryWedge, exitWedge, targetTheta, phase,
     tStart, descentLen, travelled,
     time: 0,
     evacuated: 0,
+    walkedInCavea: 0,   // total metres walked round the bowl before reaching a stair
     gateExits: new Uint32Array(WEDGES),
     _prevGateExits: new Uint32Array(WEDGES),
     caveaCount: new Uint16Array(T_BINS * THETA_BINS),
     stairCount: new Uint16Array(S_BINS * WEDGES),
     throatCount: new Uint16Array(WEDGES),
+    concourseCount: new Uint16Array(THETA_BINS),
     /** @type {{time: number, evacuated: number, rate: number, specificFlow: number}[]} */
     history: [],
     _lastSampleTime: 0,
@@ -347,17 +430,22 @@ function chooseExit(th, tt, entry, openGates, beta, rand) {
  * @param {number} dt
  */
 export function step(c, dt) {
-  const { theta, t, phase, targetTheta, exitWedge, caveaCount, stairCount, throatCount } = c;
+  const { theta, t, phase, targetTheta, exitWedge, caveaCount, stairCount, throatCount, concourseCount } = c;
+  const concourse = c.venue.concourseWidth > 0;
 
   caveaCount.fill(0);
   stairCount.fill(0);
   throatCount.fill(0);
+  if (concourse) concourseCount.fill(0);
 
   // Bin everyone first: speed depends on how crowded their own cell is, and
   // that has to be the same for everyone in it regardless of update order.
   for (let k = 0; k < c.n; k++) {
     if (phase[k] === PHASE_DONE) continue;
-    if (phase[k] === PHASE_ROW) caveaCount[tBin(t[k]) * THETA_BINS + thetaBin(theta[k])]++;
+    if (phase[k] === PHASE_ROW) {
+      if (concourse) concourseCount[thetaBin(theta[k])]++;
+      else caveaCount[tBin(t[k]) * THETA_BINS + thetaBin(theta[k])]++;
+    }
     else if (c.descentLen[k] - c.travelled[k] < THROAT_M) throatCount[exitWedge[k]]++;
     else stairCount[sBin(c.travelled[k]) * WEDGES + exitWedge[k]]++;
   }
@@ -372,10 +460,14 @@ export function step(c, dt) {
 
     if (phase[k] === PHASE_ROW) {
       const cell = j * THETA_BINS + i;
-      const v = speedAt(caveaCount[cell] / CAVEA_AREA[cell]);
+      const v = concourse
+        ? speedAt(concourseCount[i] / (CONCOURSE_ARC[i] * c.venue.concourseWidth))
+        : speedAt(caveaCount[cell] / CAVEA_AREA[cell]);
       const radius = RADIUS[cell];
       const delta = angleDelta(theta[k], targetTheta[k]);
       const stepAngle = (v * dt) / radius;
+
+      c.walkedInCavea += Math.min(Math.abs(delta), stepAngle) * radius;
 
       if (Math.abs(delta) <= stepAngle) {
         theta[k] = targetTheta[k];
@@ -383,7 +475,7 @@ export function step(c, dt) {
         // there is room. If not they wait here, and the queue backs up into
         // the seating bowl, which is exactly what it did.
         const head = 0 * WEDGES + exitWedge[k];
-        if (stairCount[head] < STAIR_CAP) {
+        if (stairCount[head] < c.stairCap) {
           phase[k] = PHASE_STAIR;
           // Fix the descent now: horizontal run to the wall, plus the drop.
           c.tStart[k] = t[k];
@@ -403,8 +495,8 @@ export function step(c, dt) {
       // Under the arch the ground is level again, so the level-walking curve
       // applies there rather than the stair one.
       const v = inThroat
-        ? speedAt(throatCount[w] / THROAT_AREA)
-        : stairSpeedAt(stairCount[curBin * WEDGES + w] / STAIR_CELL_AREA);
+        ? speedAt(throatCount[w] / c.throatArea)
+        : stairSpeedAt(stairCount[curBin * WEDGES + w] / c.stairCellArea);
 
       let next = s + v * dt;
 
@@ -412,7 +504,7 @@ export function step(c, dt) {
       if (!inThroat) {
         const entersThroat = c.descentLen[k] - next < THROAT_M;
         if (entersThroat) {
-          if (throatCount[w] >= THROAT_CAP) {
+          if (throatCount[w] >= c.throatCap) {
             next = c.descentLen[k] - THROAT_M - 1e-4;  // wait at the arch
           } else {
             throatCount[w]++;
@@ -421,7 +513,7 @@ export function step(c, dt) {
         } else {
           const nextBin = sBin(next);
           if (nextBin !== curBin) {
-            if (stairCount[nextBin * WEDGES + w] >= STAIR_CAP) {
+            if (stairCount[nextBin * WEDGES + w] >= c.stairCap) {
               next = (curBin + 1) * S_CELL - 1e-4;     // wait at the cell edge
             } else {
               stairCount[nextBin * WEDGES + w]++;
@@ -477,7 +569,7 @@ export function sample(c) {
   for (let i = 0; i < c.stairCount.length; i++) {
     const count = c.stairCount[i];
     if (count === 0) continue;
-    const rho = count / STAIR_CELL_AREA;
+    const rho = count / c.stairCellArea;
     const J = rho * stairSpeedAt(rho);
     if (J > peakJ) peakJ = J;
     sumJ += J;
@@ -544,6 +636,10 @@ export function metrics(c) {
   const meanGate = perGate.reduce((s, x) => s + x, 0) / (perGate.length || 1);
 
   return {
+    venue: c.venue.kind,
+    exits: c.openGates.length,
+    widthPerExit: c.venue.stairW,
+    meanWalkToStair: c.walkedInCavea / c.n,
     mode: c.mode,
     seed: c.seed,
     n: c.n,
