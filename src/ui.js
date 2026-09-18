@@ -4,12 +4,12 @@
  * the building lives in the modules this imports.
  */
 
-import { createCrowd, step, sample, metrics, EXIT_T } from './crowd.js?v=b11';
-import { PlanView } from './render.js?v=b11';
-import { ClearanceChart, GateStrip, mmss } from './chart.js?v=b11';
-import { CLAIMS, format, value } from './claims.js?v=b11';
-import { TIERS, WEDGES, PUBLIC_WEDGES, isAxial, heightAt } from './geometry.js?v=b11';
-import { Tour } from './tour.js?v=b11';
+import { createCrowd, step, sample, metrics, EXIT_T } from './crowd.js?v=b12';
+import { PlanView } from './render.js?v=b12';
+import { ClearanceChart, GateStrip, mmss } from './chart.js?v=b12';
+import { CLAIMS, format, value } from './claims.js?v=b12';
+import { TIERS, WEDGES, PUBLIC_WEDGES, isAxial, heightAt } from './geometry.js?v=b12';
+import { Tour } from './tour.js?v=b12';
 
 /**
  * Palette. Two categorical slots for the two exit policies, validated for
@@ -34,7 +34,7 @@ const THEME = {
 const SPEEDS = [1, 5, 15, 30, 60, 120];
 
 /** Bumped on every deploy, so "which build am I looking at" is never a guess. */
-const BUILD = 'b11';
+const BUILD = 'b12';
 console.log(`[colosseum] build ${BUILD} — tour: click, arrow keys, or Escape`);
 
 const $ = (/** @type {string} */ id) => /** @type {HTMLElement} */ (document.getElementById(id));
@@ -89,6 +89,7 @@ function build() {
   plan.setClosedGates(closed, new Set(c.venue.exits), c.venue.nominalStairW / value('stairWidth'));
   strip.set(c.gateExits, closed, state.venue);
   curve.setRun(state.venue, c.history, state.n);
+  showWidthLoss();
   redraw();
 }
 
@@ -131,6 +132,7 @@ function renderMetrics(force = false) {
   $('metrics').innerHTML =
     tile('elapsed', mmss(c.time), `${pct}% out`) +
     tile('last out', done ? mmss(m.t100) : '—', gapTxt) +
+    tile('half out', Number.isFinite(m.t50) ? mmss(m.t50) : '—', 'the median walk') +
     tile('95% out', Number.isFinite(m.t95) ? mmss(m.t95) : '—', 'robust to stragglers') +
     tile('peak stair flow', m.peakSpecificFlow ? m.peakSpecificFlow.toFixed(2) : '—',
       `p/s/m · published ${flowPub}`) +
@@ -265,6 +267,7 @@ for (const r of document.querySelectorAll('input[name=mode]')) {
 $('closed').addEventListener('input', (e) => {
   state.closedCount = Number(/** @type {any} */(e.target).value);
   $('closedOut').textContent = String(state.closedCount);
+  showWidthLoss();
   state.running = false;
   $('run').textContent = 'Run egress';
   build();
@@ -307,6 +310,24 @@ for (const b of document.querySelectorAll('.scenario')) {
     state.running = true;
     $('run').textContent = 'Pause';
   });
+}
+
+/**
+ * Shutting gates is not a separate idea from the modern comparison - it is the
+ * same axis. One removes the efficiency of each metre of stair; the other
+ * removes metres outright. Saying so turns a disaster slider into part of the
+ * argument.
+ */
+function showWidthLoss() {
+  const el = document.getElementById('widthOut');
+  if (!el) return;
+  const c = state.crowd;
+  if (!c) return;
+  const open = c.openGates.length * c.venue.stairW;
+  const full = c.venue.exits.length * c.venue.stairW;
+  el.textContent = state.closedCount
+    ? `— ${open.toFixed(0)} m of stair left, ${Math.round(100 - (100 * open) / full)}% gone`
+    : '';
 }
 
 function renderLegend() {

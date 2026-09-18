@@ -111,6 +111,7 @@ fieldset label span { color: var(--ink-2); }
 
 .slider { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.8rem; color: var(--muted); }
 .slider b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.slider i { font-style: normal; color: var(--accent); }
 input[type=range] { width: 100%; accent-color: var(--accent); }
 
 /* ---- metrics ---- */

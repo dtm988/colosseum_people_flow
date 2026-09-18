@@ -93,8 +93,13 @@ export const STEPS = [
            so it never joins anyone else's until you are outside the building. There is no
            corridor where flows merge, because there is no corridor.
            <br><br>Look at the bar chart below: eighty near-identical bars. Every stairway is
-           doing the same amount of work as every other one.`,
+           doing the same amount of work as every other one.
+           <br><br>Worth knowing what the assignment actually buys, because it is not speed.
+           Let people choose freely instead and the median spectator gets out
+           <em>sooner</em> — but the last few leave later. Assignment does not improve the
+           median. It improves the tail.`,
     watch: 'The busiest gate handles about 1.1× the average. Nothing is a bottleneck.',
+    aside: true,
     setup: (api) => {
       api.highlight({ type: 'exits' });
       api.run(true);
