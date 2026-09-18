@@ -6,9 +6,11 @@
 
 ## The idea
 
-I was in Rome a week before starting this, standing in the Colosseum. The guide repeated the line everybody repeats: fifty thousand people, out in fifteen minutes, better than a modern stadium.
+I was in Rome a week before starting this, in the Colosseum, and what held my attention was not the spectacle but the engineering. A building that seated fifty thousand people two thousand years ago. Running water plumbed to its latrines. And a crowd that could get in and out of it at something like the rate a modern stadium manages. That a structure from the first century is still roughly competitive at moving people is a strange thing to stand inside, and I wanted to know how it was done.
 
-I tried to find out whether that was true. It is not quite, and what is true instead turned out to be more interesting: the building has *less* egress width per person than a modern code would permit, and clears in a comparable time anyway, because of how the routes are arranged. That became the tool.
+So the project began as a question about the building's systems — water and people both — rather than a thesis about either. The research is what narrowed it. Chasing the circulation story turned up a claim repeated everywhere: fifty thousand people out in fifteen minutes. I went looking for where that number comes from and could not find a source for it — not a study, not a calculation, nothing behind any version of it.
+
+That is where it took off. The honest answer turned out to be better than the folklore: the Colosseum has *less* egress width per person than a modern code would permit, and clears in a comparable time anyway, because of how its routes are arranged.
 
 ## Theme 1, and why this approach
 
