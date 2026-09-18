@@ -66,11 +66,20 @@ export const STEPS = [
     },
   },
   {
-    title: 'Rank decided where you sat — and how far you walked',
+    title: 'Rank decided where you sat — and which arch you left by',
     body: `Seating was stratified precisely. Senators and the Vestals sat at the arena's edge;
            knights above them; citizens above that; and at the very top a wooden gallery of
            standing room for the poor, for slaves, and for women.
-           <br><br>Here is the part a plan view hides. The seating rises with the outer wall, so
+           <br><br>And your place was not chosen on the day. It was <b>assigned</b> — rank fixed
+           your tier, and your tier and block fixed which of the seventy-six arches you came in
+           by and went out through. You did not pick an exit on the way out; the building had
+           already picked it.
+           <br><br><em>How firmly do we know that?</em> Guidebooks describe numbered tokens
+           naming gate, tier, row and seat, and the evidence for those is thinner than they let
+           on. The architecture is not in doubt though: the numerals are carved above the arches,
+           and restoration found the original red paint still on them. Chit or no chit, the
+           building told you where to go.
+           <br><br>One more thing a plan view hides. The seating rises with the outer wall, so
            the cheapest seats were also <b>forty metres up</b>. Rank set your tier, tier set your
            height, and height was most of the journey home.`,
     setup: (api) => {
@@ -99,12 +108,11 @@ export const STEPS = [
            corridor where flows merge, because there is no corridor.
            <br><br>Look at the bar chart below: eighty near-identical bars. Every stairway is
            doing the same amount of work as every other one.
-           <br><br>Worth knowing what the assignment actually buys, because it is not speed.
+           <br><br>So what did that assignment from the last step actually buy? Not speed.
            Let people choose freely instead and the median spectator gets out
            <em>sooner</em> — but the last few leave later. Assignment does not improve the
            median. It improves the tail.`,
     watch: 'The busiest gate handles about 1.1× the average. Nothing is a bottleneck.',
-    aside: true,
     setup: (api) => {
       api.highlight({ type: 'exits' });
       api.run(true);

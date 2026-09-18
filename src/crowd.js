@@ -17,14 +17,37 @@
  *
  * Saying which is which is the point. A model that quietly imposes its own
  * headline result and then reports it as a finding is worthless.
+ *
+ * KNOWN SIMPLIFICATIONS, named rather than hidden:
+ *
+ *   1. Capacity is allocated in array-index order. Densities are binned once
+ *      per step so everyone in a cell sees the same value, but the admission
+ *      checks mutate the counts as the loop runs - so when a cell has one slot
+ *      left, the lower array index takes it. Deterministic, and effectively
+ *      random because the crowd is generated in random order, but it is a tie
+ *      break the physics does not justify.
+ *
+ *   2. Speed and admission read different epochs. An agent's speed comes from
+ *      the start-of-step counts while its admission check uses live ones. A
+ *      standard approximation, and worth knowing about.
+ *
+ *   3. Entry spread is measured in gate-index space, so one step of spread is
+ *      about 6 m in the Colosseum and about 63 m in a building with eight
+ *      exits. Exit choice is distance-dominated so the effect is small, but
+ *      the parameter is not strictly comparable between the two venues.
+ *
+ *   4. Exit choice is final. Nobody queued at a busy stair ever reroutes to an
+ *      idle one. Defensible here because stairs are near-equally loaded in
+ *      both venues; it would not be if one route were congested and another
+ *      free.
  */
 
-import { value } from './claims.js?v=b17';
+import { value } from './claims.js?v=b19';
 import {
   OUTER, ARENA, WEDGES, WEDGE_ANGLE, TIERS, PUBLIC_WEDGES, AXIAL_WEDGES,
   ellipsePoint, wedgeAngle, descentLength,
-} from './geometry.js?v=b17';
-import { mulberry32, weightedPick, geometricOffset } from './rng.js?v=b17';
+} from './geometry.js?v=b19';
+import { mulberry32, weightedPick, geometricOffset } from './rng.js?v=b19';
 
 // ---------------------------------------------------------------------------
 // Behavioural constants, all traceable to claims.js
@@ -75,9 +98,6 @@ export function speedAt(density) {
 export function stairSpeedAt(density) {
   return Math.max(V_FLOOR, Math.min(STAIR_FREE, STAIR_DRAG * speedAt(density)));
 }
-
-/** Specific flow a stream achieves at a given density, person/s/m. */
-export const specificFlowAt = (density) => density * stairSpeedAt(density);
 
 /**
  * Log-odds of the familiar exit at equal distance: ln(0.71 / 0.29).
@@ -130,12 +150,6 @@ for (let j = 0; j < T_BINS; j++) {
  * size, so density means the same thing everywhere and specific flow cannot
  * exceed what the speed-density curve allows.
  */
-/** Arc length of one angular bin at concourse depth, for the shared-ring case. */
-const CONCOURSE_ARC = new Float32Array(THETA_BINS);
-for (let i = 0; i < THETA_BINS; i++) {
-  CONCOURSE_ARC[i] = RADIUS[Math.floor(0.85 * T_BINS) * THETA_BINS + i] * D_THETA;
-}
-
 const S_CELL = 1.5;                      // metres of stair per cell
 const S_BINS = 64;                       // covers 96 m of descent
 const sBin = (/** @type {number} */ s) => Math.min(S_BINS - 1, Math.max(0, Math.floor(s / S_CELL)));
@@ -216,7 +230,6 @@ export function venueOf(kind) {
       // Effective width: the part of the nominal width that actually carries flow.
       stairW: (totalStair / exits.length) * EFFICIENCY,
       gateW: (totalGate / exits.length) * EFFICIENCY,
-      concourseWidth: value('concourseWidth'),
       label: `${exits.length} grand exits, ${Math.round(100 * EFFICIENCY)}% effective`,
     };
   }
@@ -226,7 +239,6 @@ export function venueOf(kind) {
     efficiency: 1,
     stairW: STAIR_W,
     gateW: GATE_W,
-    concourseWidth: 0,   // no shared horizontal circulation at all
     label: `${PUBLIC_WEDGES.length} numbered gates`,
   };
 }
@@ -249,9 +261,9 @@ function angleDelta(from, to) {
 // Phases
 // ---------------------------------------------------------------------------
 
-const PHASE_ROW = 0;    // along the row and round the cavea to a stairway
-const PHASE_STAIR = 1;  // down the stair and out through the gate
-const PHASE_DONE = 2;
+export const PHASE_ROW = 0;    // along the row and round the cavea to a stairway
+export const PHASE_STAIR = 1;  // down the stair and out through the gate
+export const PHASE_DONE = 2;
 
 export const EXIT_T = 1.05; // past the outer wall
 
@@ -343,8 +355,14 @@ export function createCrowd(opts = {}) {
       const idx = openGates.indexOf(base) + geometricOffset(entrySpread, rand);
       entry = openGates[((idx % openGates.length) + openGates.length) % openGates.length];
     } else {
+      // Drawn from the gates that actually exist. Letting the offset wander
+      // onto a reserved axial arch used to leave that spectator with an entry
+      // gate no one can leave by, so `g === entry` never matched in
+      // chooseExit and they lost the familiarity bias entirely - silently, for
+      // about 8% of the unrouted crowd.
       const base = mainEntrances[Math.floor(rand() * mainEntrances.length)];
-      entry = (base + geometricOffset(entrySpread, rand) + WEDGES) % WEDGES;
+      const bi = openGates.indexOf(nearestExit[base]) + geometricOffset(entrySpread, rand);
+      entry = openGates[((bi % openGates.length) + openGates.length) % openGates.length];
     }
     entryWedge[k] = entry;
     exitWedge[k] = chooseExit(theta[k], t[k], entry, openGates, beta, rand);
@@ -365,7 +383,6 @@ export function createCrowd(opts = {}) {
     caveaCount: new Uint16Array(T_BINS * THETA_BINS),
     stairCount: new Uint16Array(S_BINS * WEDGES),
     throatCount: new Uint16Array(WEDGES),
-    concourseCount: new Uint16Array(THETA_BINS),
     /** @type {{time: number, evacuated: number, rate: number, specificFlow: number}[]} */
     history: [],
     _lastSampleTime: 0,
@@ -442,22 +459,17 @@ function chooseExit(th, tt, entry, openGates, beta, rand) {
  * @param {number} dt
  */
 export function step(c, dt) {
-  const { theta, t, phase, targetTheta, exitWedge, caveaCount, stairCount, throatCount, concourseCount } = c;
-  const concourse = c.venue.concourseWidth > 0;
+  const { theta, t, phase, targetTheta, exitWedge, caveaCount, stairCount, throatCount } = c;
 
   caveaCount.fill(0);
   stairCount.fill(0);
   throatCount.fill(0);
-  if (concourse) concourseCount.fill(0);
 
   // Bin everyone first: speed depends on how crowded their own cell is, and
   // that has to be the same for everyone in it regardless of update order.
   for (let k = 0; k < c.n; k++) {
     if (phase[k] === PHASE_DONE) continue;
-    if (phase[k] === PHASE_ROW) {
-      if (concourse) concourseCount[thetaBin(theta[k])]++;
-      else caveaCount[tBin(t[k]) * THETA_BINS + thetaBin(theta[k])]++;
-    }
+    if (phase[k] === PHASE_ROW) caveaCount[tBin(t[k]) * THETA_BINS + thetaBin(theta[k])]++;
     else if (c.descentLen[k] - c.travelled[k] < THROAT_M) throatCount[exitWedge[k]]++;
     else stairCount[sBin(c.travelled[k]) * WEDGES + exitWedge[k]]++;
   }
@@ -472,9 +484,7 @@ export function step(c, dt) {
 
     if (phase[k] === PHASE_ROW) {
       const cell = j * THETA_BINS + i;
-      const v = concourse
-        ? speedAt(concourseCount[i] / (CONCOURSE_ARC[i] * c.venue.concourseWidth))
-        : speedAt(caveaCount[cell] / CAVEA_AREA[cell]);
+      const v = speedAt(caveaCount[cell] / CAVEA_AREA[cell]);
       const radius = RADIUS[cell];
       const delta = angleDelta(theta[k], targetTheta[k]);
       const stepAngle = (v * dt) / radius;
@@ -643,7 +653,8 @@ export function metrics(c) {
     : 0;
 
   const used = [...c.gateExits].filter((x) => x > 0).length;
-  const busiest = Math.max(...c.gateExits);
+  let busiest = 0;
+  for (let w = 0; w < WEDGES; w++) if (c.gateExits[w] > busiest) busiest = c.gateExits[w];
   const perGate = [...c.gateExits].filter((x) => x > 0);
   const meanGate = perGate.reduce((s, x) => s + x, 0) / (perGate.length || 1);
 

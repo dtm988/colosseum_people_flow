@@ -12,8 +12,8 @@
 import {
   OUTER, ARENA, WEDGES, WEDGE_ANGLE, TIERS, AXIAL_WEDGES, isAxial,
   ellipsePoint, wedgeAngle,
-} from './geometry.js?v=b17';
-import { EXIT_T } from './crowd.js?v=b17';
+} from './geometry.js?v=b19';
+import { PHASE_DONE, PHASE_STAIR } from './crowd.js?v=b19';
 
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
 /** @param {number} n */
@@ -51,7 +51,6 @@ export class PlanView {
     this.dpr = Math.min(2, window.devicePixelRatio || 1);
     /** @type {Set<number>} */ this.exits = new Set();
     this.gateScale = 1;
-    this.showHeat = false;
     /** @type {null | {type: string, wedge?: number, tier?: number, label?: string}} */
     this.highlight = null;
     this.resize();
@@ -60,8 +59,14 @@ export class PlanView {
     // module first runs - a grid cell settles after layout. Without this the
     // backing store keeps a stale aspect ratio and the browser stretches it,
     // which quietly turns a 189 x 156 m ellipse into something near circular.
+    // Debounced: a resize reallocates roughly 48 MB of typed arrays, and an
+    // observer firing continuously through a window drag would churn that hard.
     if (typeof ResizeObserver !== 'undefined') {
-      this._ro = new ResizeObserver(() => this.resize());
+      let pending = 0;
+      this._ro = new ResizeObserver(() => {
+        clearTimeout(pending);
+        pending = setTimeout(() => this.resize(), 120);
+      });
       this._ro.observe(canvas);
     }
   }
@@ -180,7 +185,6 @@ export class PlanView {
       g.fillText(roman(w + 1), x, y);
     }
 
-    this.staticCanvas = off;
     this.staticData = g.getImageData(0, 0, this.w, this.h);
     this.frame = this.ctx.createImageData(this.w, this.h);
     this.counts = new Uint16Array(this.w * this.h);
@@ -221,9 +225,9 @@ export class PlanView {
     const jitter = (k) => (((Math.imul(k, 2654435761) >>> 8) & 1023) / 1023 - 0.5);
 
     for (let k = 0; k < n; k++) {
-      if (phase[k] === 2) continue;
+      if (phase[k] === PHASE_DONE) continue;
       const tt = t[k];
-      const th = theta[k] + jitter(k) * WEDGE_ANGLE * (phase[k] === 1 ? 0.22 : 0.9);
+      const th = theta[k] + jitter(k) * WEDGE_ANGLE * (phase[k] === PHASE_STAIR ? 0.22 : 0.9);
 
       const a = ARENA.a + (OUTER.a - ARENA.a) * tt;
       const b = ARENA.b + (OUTER.b - ARENA.b) * tt;
@@ -377,7 +381,11 @@ export class PlanView {
     const y = ((clientY - rect.top) * this.dpr - this.cy) / this.scale;
     const norm = (x / OUTER.a) ** 2 + (y / OUTER.b) ** 2;
     if (norm > WORLD_R * WORLD_R) return -1;
-    const th = Math.atan2(y, x);
+    // Wedges are placed by the ellipse PARAMETER, not by geometric angle. On a
+    // 189 x 156 m ellipse the two differ by up to about 5.5 degrees - more
+    // than a whole 4.5 degree wedge - so taking atan2(y, x) here would hand
+    // back a neighbouring wedge for some clicks.
+    const th = Math.atan2(y / OUTER.b, x / OUTER.a);
     const w = Math.round(th / WEDGE_ANGLE);
     return ((w % WEDGES) + WEDGES) % WEDGES;
   }

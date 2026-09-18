@@ -9,6 +9,7 @@
  * monotonicity, and determinism.
  */
 
+import { readFileSync, readdirSync } from 'node:fs';
 import { createCrowd, runToCompletion, speedAt, venueOf } from './src/crowd.js';
 import { CLAIMS } from './src/claims.js';
 
@@ -77,6 +78,28 @@ console.log(`  Colosseum   ${vC.exits.length} stairs x ${f2(vC.stairW)} m effect
 console.log(`  Modern      ${vM.exits.length} stairs x ${f2(vM.nominalStairW)} m nominal, ${f2(vM.stairW)} m effective  ->  ${mmss(modern.t100)}`);
 console.log(`  To match the Colosseum it needs ${Math.round(100 / vM.efficiency - 100)}% more staircase.`);
 console.log(`  Colosseum egress width: ${f2(vC.exits.length * vC.stairW / N * 1000)} mm per spectator; a modern code asks 7.6 mm.`);
+
+// --- the cache-busting version has to agree everywhere ---------------------
+//
+// Module specifiers must be literal strings, so the build version is repeated
+// across every file. That is exactly the kind of manual step that goes wrong -
+// it already has once - so it is checked rather than trusted.
+console.log('\nBuild version');
+{
+  const files = ['index.html', ...readdirSync('src').map((f) => `src/${f}`)];
+  const found = new Map();
+  for (const f of files) {
+    for (const m of readFileSync(f, 'utf8').matchAll(/\?v=([a-z0-9]+)/g)) {
+      found.set(m[1], [...(found.get(m[1]) ?? []), f]);
+    }
+  }
+  const declared = readFileSync('src/ui.js', 'utf8').match(/BUILD = '([a-z0-9]+)'/)?.[1];
+  const versions = [...found.keys()];
+  console.log(`  BUILD = ${declared}; specifiers use ${versions.join(', ')}`);
+  check('every module specifier uses one version', versions.length === 1,
+    versions.length === 1 ? versions[0] : versions.map((v) => `${v}: ${found.get(v).length} file(s)`).join(' | '));
+  check('specifier version matches BUILD', versions[0] === declared, `${versions[0]} vs ${declared}`);
+}
 
 console.log('\nInvariants');
 for (const [mode, r] of Object.entries(runs)) {

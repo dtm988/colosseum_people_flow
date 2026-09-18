@@ -12,7 +12,7 @@
  * simplification of one - the tiers genuinely do rise as they recede.
  */
 
-import { value } from './claims.js?v=b17';
+import { value } from './claims.js?v=b19';
 
 /** Half-dimensions of the outer wall, metres. */
 export const OUTER = { a: value('outerLength') / 2, b: value('outerWidth') / 2 };
@@ -97,14 +97,6 @@ export function wedgeAngle(w) {
 }
 
 /**
- * The gate serving a wedge is at that wedge's angle, on the outer wall.
- * @param {number} w wedge index
- */
-export function gatePoint(w) {
-  return ellipsePoint(wedgeAngle(w), 1);
-}
-
-/**
  * A point in the cavea.
  * @param {number} theta radians
  * @param {number} t 0 at the arena wall, 1 at the outer wall
@@ -116,72 +108,7 @@ export function ellipsePoint(theta, t) {
   return { x: a * Math.cos(theta), y: b * Math.sin(theta) };
 }
 
-/**
- * Local radius at an angle and depth - useful for turning an angular offset
- * into a walking distance along a curved row.
- * @param {number} theta
- * @param {number} t
- */
-export function radiusAt(theta, t) {
-  const p = ellipsePoint(theta, t);
-  return Math.hypot(p.x, p.y);
-}
 
-/**
- * Walking distance from a seat to a gate, following the only routes the
- * building actually offers: around the row to a stairway, then down and out.
- *
- * Angular travel is along a curved row, so it is scaled by the local radius;
- * radial travel is down a raked stair, so it is longer than the plan distance
- * suggests. The stair factor is a modelling choice, not an attested figure.
- *
- * @param {number} theta seat angle
- * @param {number} t seat depth
- * @param {number} gateWedge which gate they are walking to
- * @returns {number} metres
- */
-export function walkDistance(theta, t, gateWedge) {
-  const target = wedgeAngle(gateWedge);
-  let d = Math.abs(theta - target);
-  if (d > Math.PI) d = 2 * Math.PI - d; // the short way round
-  const angular = d * radiusAt(theta, t);
-  const radial = (1 - t) * Math.hypot(OUTER.a - ARENA.a, OUTER.b - ARENA.b) * 0.5;
-  return angular + radial;
-}
-
-/**
- * The gate a spectator would reach soonest, among those still open.
- *
- * With 80 evenly spaced gates this is almost always the spectator's own wedge -
- * which is the point. The Roman assignment encodes the choice a perfectly
- * informed crowd would make anyway; its value is that it does not require
- * anyone to make it. The interesting cases are when gates close, or when
- * people head for an exit they know rather than the one that is nearest.
- *
- * @param {number} theta
- * @param {number} t
- * @param {Set<number>} openWedges
- * @returns {number} wedge index of the chosen gate
- */
-export function nearestOpenGate(theta, t, openWedges) {
-  let best = -1;
-  let bestD = Infinity;
-  for (const w of openWedges) {
-    const d = walkDistance(theta, t, w);
-    if (d < bestD) { bestD = d; best = w; }
-  }
-  if (best < 0) throw new Error('No open gates - the building cannot be evacuated.');
-  return best;
-}
-
-/**
- * Which tier a radial depth falls in.
- * @param {number} t
- */
-export function tierAt(t) {
-  for (const tier of TIERS) if (t >= tier.t0 && t <= tier.t1) return tier;
-  return TIERS[TIERS.length - 1];
-}
 
 /**
  * Height of the seating above the arena floor, metres.
@@ -209,5 +136,3 @@ export function descentLength(t, radialRun) {
   return Math.hypot(radialRun, heightAt(t));
 }
 
-/** Bounding box of the whole structure, for fitting the view. */
-export const BOUNDS = { minX: -OUTER.a, maxX: OUTER.a, minY: -OUTER.b, maxY: OUTER.b };

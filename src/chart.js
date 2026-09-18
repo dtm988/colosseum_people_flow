@@ -8,7 +8,7 @@
  * carry the meaning.
  */
 
-import { WEDGES, isAxial } from './geometry.js?v=b17';
+import { WEDGES, isAxial } from './geometry.js?v=b19';
 
 const FONT = '11px system-ui, -apple-system, "Segoe UI", sans-serif';
 const MONO = '11px ui-monospace, SFMono-Regular, Menlo, monospace';
@@ -50,16 +50,25 @@ class Base {
 export class ClearanceChart extends Base {
   constructor(canvas, theme) {
     super(canvas, theme);
-    /** @type {Record<string, {time:number, evacuated:number}[]>} */
+    /**
+     * Each run carries its own crowd size. A single shared `n` meant a
+     * retained run was rescaled by whatever the *next* run's crowd size was -
+     * run 50,000, keep the curve, drop the slider to 10,000, and the old line
+     * plotted to 500% and shot off the top of the chart.
+     * @type {Record<string, {history: {time:number, evacuated:number}[], n: number, color: string, dash: boolean}>}
+     */
     this.runs = {};
-    this.n = 1;
-    this.hoverX = null;
   }
 
-  /** @param {string} key @param {{time:number,evacuated:number}[]} history @param {number} n */
-  setRun(key, history, n) {
-    this.runs[key] = history;
-    this.n = n;
+  /**
+   * @param {string} key
+   * @param {{time:number,evacuated:number}[]} history
+   * @param {number} n
+   * @param {string} color
+   * @param {boolean} [dash] secondary encoding, so two runs in one building are distinguishable
+   */
+  setRun(key, history, n, color, dash = false) {
+    this.runs[key] = { history, n, color, dash };
   }
 
   clearRuns() { this.runs = {}; }
@@ -75,8 +84,8 @@ export class ClearanceChart extends Base {
     const plotH = this.h - padT - padB;
 
     let maxT = 60;
-    for (const h of Object.values(this.runs)) {
-      const last = h[h.length - 1];
+    for (const r of Object.values(this.runs)) {
+      const last = r.history[r.history.length - 1];
       if (last) maxT = Math.max(maxT, last.time);
     }
     maxT = Math.ceil(maxT / 300) * 300;
@@ -106,20 +115,23 @@ export class ClearanceChart extends Base {
     }
 
     // Series.
-    for (const [key, hist] of Object.entries(this.runs)) {
+    for (const [key, run] of Object.entries(this.runs)) {
+      const hist = run.history;
       if (!hist.length) continue;
       g.beginPath();
       g.moveTo(X(0), Y(0));
-      for (const h of hist) g.lineTo(X(h.time), Y(h.evacuated / this.n));
-      g.strokeStyle = T.series[key];
+      for (const h of hist) g.lineTo(X(h.time), Y(h.evacuated / run.n));
+      g.strokeStyle = run.color;
       g.lineWidth = 2 * D;
       g.lineJoin = 'round';
+      g.setLineDash(run.dash ? [5 * D, 4 * D] : []);
       g.stroke();
+      g.setLineDash([]);
 
       // Direct label at the head of the line - identity without a hunt.
       const last = hist[hist.length - 1];
-      const lx = X(last.time), ly = Y(last.evacuated / this.n);
-      g.fillStyle = T.series[key];
+      const lx = X(last.time), ly = Y(last.evacuated / run.n);
+      g.fillStyle = run.color;
       g.beginPath();
       g.arc(lx, ly, 3 * D, 0, Math.PI * 2);
       g.fill();
@@ -143,13 +155,15 @@ export class GateStrip extends Base {
   constructor(canvas, theme) {
     super(canvas, theme);
     this.counts = new Uint32Array(WEDGES);
-    this.seriesKey = 'colosseum';
+    this.color = '#888';
+    this.exitCount = WEDGES - 4;
   }
 
-  /** @param {Uint32Array} counts @param {string} key */
-  set(counts, key) {
+  /** @param {Uint32Array} counts @param {string} color @param {number} exitCount how many gates this building has */
+  set(counts, color, exitCount) {
     this.counts = counts;
-    this.seriesKey = key;
+    this.color = color;
+    this.exitCount = exitCount;
   }
 
   draw() {
@@ -175,7 +189,12 @@ export class GateStrip extends Base {
     g.lineTo(padL + plotW, padT + plotH + 0.5);
     g.stroke();
 
-    const mean = [...this.counts].filter((_, w) => !isAxial(w)).reduce((a, b) => a + b, 0) / (WEDGES - 4);
+    // Averaged over the gates this building actually has, not over all 76
+    // public arches - in a building with eight exits the latter puts the mean
+    // line on the floor and it stops meaning anything.
+    let total = 0;
+    for (let w = 0; w < WEDGES; w++) total += this.counts[w];
+    const mean = total / Math.max(1, this.exitCount);
 
     for (let w = 0; w < WEDGES; w++) {
       const v = this.counts[w];
@@ -183,7 +202,7 @@ export class GateStrip extends Base {
       const hgt = (v / max) * plotH;
       const y = padT + plotH - hgt;
 
-      g.fillStyle = isAxial(w) ? T.structureDim : T.series[this.seriesKey];
+      g.fillStyle = isAxial(w) ? T.structureDim : this.color;
       if (hgt < 1) {
         g.fillRect(x, padT + plotH - 1 * D, barW, 1 * D);
       } else {

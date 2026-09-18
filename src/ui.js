@@ -4,12 +4,12 @@
  * the building lives in the modules this imports.
  */
 
-import { createCrowd, step, sample, metrics, EXIT_T } from './crowd.js?v=b17';
-import { PlanView } from './render.js?v=b17';
-import { ClearanceChart, GateStrip, mmss } from './chart.js?v=b17';
-import { CLAIMS, format, value } from './claims.js?v=b17';
-import { TIERS, WEDGES, PUBLIC_WEDGES, isAxial, heightAt } from './geometry.js?v=b17';
-import { Tour } from './tour.js?v=b17';
+import { createCrowd, step, sample, metrics } from './crowd.js?v=b19';
+import { PlanView } from './render.js?v=b19';
+import { ClearanceChart, GateStrip, mmss } from './chart.js?v=b19';
+import { CLAIMS, format, value } from './claims.js?v=b19';
+import { TIERS, isAxial, heightAt } from './geometry.js?v=b19';
+import { Tour } from './tour.js?v=b19';
 
 /**
  * Palette. Two categorical slots for the two exit policies, validated for
@@ -33,7 +33,7 @@ const THEME = {
 const SPEEDS = [1, 5, 15, 30, 60, 120];
 
 /** Bumped on every deploy, so "which build am I looking at" is never a guess. */
-const BUILD = 'b17';
+const BUILD = 'b19';
 console.log(`[colosseum] build ${BUILD} — tour: click, arrow keys, or Escape`);
 
 const $ = (/** @type {string} */ id) => /** @type {HTMLElement} */ (document.getElementById(id));
@@ -66,9 +66,18 @@ function build() {
   state.crowd = c;
   state.sinceSample = 0;
   plan.setVenue(new Set(c.venue.exits), c.venue.nominalStairW / value('stairWidth'));
-  strip.set(c.gateExits, state.venue);
-  curve.setRun(state.venue, c.history, state.n);
+  strip.set(c.gateExits, THEME.series[state.venue], c.venue.exits.length);
+  // Keyed by building AND policy. Keying by building alone meant switching
+  // Assigned to Free choice overwrote the curve you wanted to compare against,
+  // which is the one comparison the toggle exists to make.
+  curve.setRun(runLabel(), c.history, state.n, THEME.series[state.venue], state.mode === 'unrouted');
+  renderDrill(state.selectedWedge);
   redraw();
+}
+
+/** Building and policy together - the two things a stored curve must be told apart by. */
+function runLabel() {
+  return `${state.venue === 'modern' ? 'modern' : 'Colosseum'} · ${state.mode === 'routed' ? 'assigned' : 'free choice'}`;
 }
 
 function redraw() {
@@ -124,7 +133,7 @@ function renderClaims() {
   const order = ['egressFolk', 'egressPublished', 'specificFlowColosseum', 'specificFlowModern4m',
     'capacity', 'publicGates', 'numerals', 'gateWidth', 'stairWidth', 'outerHeight',
     'freeSpeed', 'jamSpeed', 'stairCapacity', 'stairSpeed',
-    'familiarExitBias', 'familiarityIsEmergency', 'tesserae', 'modernExits', 'concourseWidth'];
+    'familiarExitBias', 'familiarityIsEmergency', 'tesserae', 'modernExits'];
   $('claimList').innerHTML = order.map((k) => {
     const f = format(k);
     return `<div class="claim"><div class="claim-h"><b>${f.text}</b><span class="chip t-${f.tier}">${f.tier}</span></div>
@@ -142,6 +151,7 @@ function renderClaims() {
 function renderDrill(w) {
   const el = $('drill');
   if (w == null || w < 0) { el.hidden = true; return; }
+  if (!state.crowd) { el.hidden = true; return; }
   el.hidden = false;
 
   if (isAxial(w)) {
@@ -280,17 +290,22 @@ for (const b of document.querySelectorAll('.scenario')) {
 }
 
 function renderLegend() {
-  $('legend').innerHTML = Object.keys(curve.runs).map((k) =>
-    `<span class="key"><i style="background:${THEME.series[k]}"></i>${k}</span>`).join('');
+  $('legend').innerHTML = Object.entries(curve.runs).map(([k, r]) =>
+    `<span class="key"><i style="background:${r.color};${r.dash ? 'opacity:.55' : ''}"></i>${k}</span>`).join('');
 }
 
+let resizePending = 0;
 addEventListener('resize', () => {
+  clearTimeout(resizePending);
+  resizePending = setTimeout(onResize, 120);
+});
+function onResize() {
   plan.resize();
   if (state.crowd) plan.setVenue(new Set(state.crowd.venue.exits));
   curve.resize();
   strip.resize();
   redraw();
-});
+}
 
 /**
  * Automation hook.
