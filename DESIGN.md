@@ -6,34 +6,32 @@
 
 ## The idea
 
-I was in the Roman Colosseum a week before starting this and found myself taken with the intricate, ancient engineering. A stadium built two thousand years ago that seated fifty thousand people and featured running water plumbed to its latrines. Its basement level could be flooded to stage naval battle reenactments, then drained and the floor put back in place to stage land skirmishes. Due to clever design, massive crowds were able to flow into and out of the Colosseum at rates commensurate with modern sports stadiums.
+I was in the Roman Colosseum a week before starting this and found myself taken with the intricate, ancient engineering: a stadium built two thousand years ago that seated fifty thousand people and featured running water plumbed to its latrines. Its basement level could be flooded to stage naval battle reenactments, then drained and the floor put back in place to support land skirmishes. It even had a retractable roof for shade made from ship sails on pulleys. Due to clever design, massive crowds were able to flow into and out of the Colosseum at rates commensurate with modern sports stadiums.
 
-So the project began as a question about the building's systems — the flow of both water and people — rather than a thesis about either. The research is what narrowed it. Chasing the circulation story turned up a claim repeated everywhere: fifty thousand people out in fifteen minutes. I went looking for where that number comes from and could not find a source for it — not a study, not a calculation, nothing behind any version of it.
-
-That is where it took off. The honest answer turned out to be better than the folklore: the Colosseum has *less* egress width per person than a modern code would permit, yet clears in comparable time anyway, because of how its routes are arranged.
+I sought to build an app that showcased and explained some aspect of the Colosseum's design, with early ideas to either focus on the flow of people or water. Research yielded an obvious choice between the two: people flow. Chasing the circulation story turned up a oft repeated claim repeated: fifty thousand people out in fifteen minutes. I found one study from 2022 that compared a simulation of Colosseum people flow to a newly built stadium and found their egress rates to be comparable, then sought to replicate and expand upon the premise.
 
 ## Theme 1, and why this approach
 
 Theme 1 asks for something that builds deep understanding of a complex system, and explicitly invites "a simulation of emergent dynamics." While it is possible to explain the flow of people through the Colosseum in words, a visual model helps bring the theory to life and enables real world comparison to modern equivalents such as professional sports stadiums.
 
-Importantly, I decided to enable running a high-fidelity simulation live instead of showing a pre-canned animation. So the tool simulates 50,000 people individually, and every claim it makes about the building is something you can watch unfold and then the user is invited to change the input parameters and experiment with the mechanics in real time.
+Importantly, I decided to enable running a high-fidelity simulation live instead of showing a pre-canned animation. So the tool simulates 50,000 people individually, and every claim it makes about the building is something the user can replicate and watch unfold live. Then, they are invited to change the input parameters and engage in hands on experimentation with the mechanics.
 
 ## What is non-obvious
 
-**The famous number has no source.** "Empties in fifteen minutes" is a ubiquitous phrase — sometimes quoted as five or ten minutes — and I could not find an originating study, engineer, or calculation behind any version of it. What does exist is a 2022 peer-reviewed simulation comparing the Colosseum with a modern arena. Most of what people "know" about this building's performance is folklore with a number attached.
+**The famous number has no single source.** "Empties in fifteen minutes" is a ubiquitous phrase — sometimes quoted as five or ten minutes — and I could not find an originating study, engineer, or calculation behind any version of it. What does exist is a 2022 peer-reviewed simulation comparing the Colosseum with a modern arena. Most of what people "know" about this building's performance is folklore with a number attached.
 
-**The Colosseum would fail a modern egress code.** It provides about **4.3 mm of working stair per spectator**. The International Building Code asks for 7.6 mm, or 5.1 mm in a fully sprinklered building with voice alarm. It is below even the exception — and clears the building in a time comparable to a modern arena.
+**The Colosseum would fail a modern egress code.** It provides about **4.3 mm of working stair width per spectator**. The International Building Code asks for 7.6 mm, or 5.1 mm in a fully sprinklered building with voice alarms. It is below even the exception — and clears the building in a time comparable to a modern arena.
 
-**The reason is topological, not dimensional.** Each of the ~80 wedges has its own seating block, its own stairway, and its own arch. No two routes share a corridor, so nothing merges inside the building and every metre of stair runs near its theoretical maximum. A modern arena gathers people into concourses first, and loses roughly 30% of the flow each metre could carry. The published figures make the equivalence exact:
+**The reason is topological, not dimensional.** Each of the ~80 wedges of the Colosseum has its own seating block, its own stairway, and its own arch. No two routes share a corridor, so nothing merges inside the building and every meter of stair runs near its theoretical maximum. A modern arena will funnel people into open concourses first, and then ushers them towards a small number of grand staircases, losing roughly 30% of the flow each meter of those staircases could theoretically carry. The published figures make the equivalence exact:
 
 | | width | specific flow | capacity |
 |---|---|---|---|
 | Colosseum stair | 2.8 m | 1.14 p/s/m | **3.19 people/s** |
 | Modern arena stair | 4.0 m | 0.80 p/s/m | **3.20 people/s** |
 
-A stair thirty percent narrower does the same work. Across a whole building that compounds: to match the Colosseum, a modern arena needs about **42% more staircase**.
+A stair thirty percent narrower does the same work in the same time. Across a whole building that compounds: to match the Colosseum, a modern arena needs about **42% more staircase space**.
 
-**And the social hierarchy is in the circulation plan.** Rank fixed your tier, tier fixed your height, and height was most of your journey home. The cheapest seats — the wooden gallery for the poor, slaves and women — were forty metres up and had the longest way down. A plan view hides this completely, which is why clicking a wedge opens a cross-section.
+**And the social hierarchy is in the circulation plan.** Rank fixed your tier, tier fixed your height, and height was most of your journey home. The cheapest seats — the wooden gallery for the poor, slaves and women — were forty metres up and had the longest way down.
 
 ## How the model works
 
@@ -43,8 +41,8 @@ The part I care most about getting right is the division between what is importe
 
 **Imported from measurement**
 - Walking speed as a function of local density — Kholshevnikov & Samoshin, roughly 35,000 observations
-- The maximum flow a metre of stair carries, from the stair literature
-- The 71% familiar-exit bias, which fixes the exit-choice model's one free parameter
+- The maximum flow a metre of stair carries, from stair literature
+- The 71% familiar-exit bias, which captures the phenomenon that people tend to exist where they came in and fixes the exit-choice model's one free parameter
 - The modern arena's flow efficiency, 0.80 p/s/m against the Colosseum's 1.14, applied as *effective width* — the standard way obstruction and merging losses are modelled
 
 **Emergent from the model**
@@ -58,24 +56,22 @@ That last division is the whole credibility of the exercise. The model's peak st
 
 ## Decisions and trade-offs
 
-Almost none of my time went on construction. It went here — on choices where the attractive option and the defensible one pulled in different directions.
-
 ### 1. Water or people
 
-The trip that prompted this threw up two candidates. The Colosseum moved **water** — aqueduct-fed latrines flushed continuously, a hundred-odd drinking fountains, a great circular drain, and, at the inaugural games, an arena flooded for naval displays. And it moved **people**.
+The trip that prompted this threw up two candidates. The Colosseum moved **water** — aqueduct-fed latrines flushed continuously, a hundred-odd drinking fountains, a great circular drain, and, at the inaugural games, an arena flooded for naval displays. And obviously it moved **people** into and out of the stands.
 
-Water was the better story by a distance. Cassius Dio has Titus "suddenly fill this same theatre with water"; Martial, probably an eyewitness, writes *"here but lately was land… here but lately was sea."* Then Domitian built the hypogeum and flooding became impossible, so the whole spectacle exists in a window of about five years. That is a terrific narrative.
+Water was initially the better story. Cassius Dio has Titus "suddenly fill this same theatre with water"; Martial, probably an eyewitness, writes *"here but lately was land… here but lately was sea."* Then Domitian built the hypogeum and flooding became impossible, so the whole spectacle exists in a window of about five years. That is a terrific narrative.
 
 I cut it, and the reasoning is the one I would most want read. The **quantities** are sourced — roughly 5,600 m³ to flood, Aqua Claudia at 2.12 m³/s, published fill estimates. The **topology is not**: there is no surviving archaeological evidence for the link from the Caelian, and no pipes have been found inside the building. A flow visualisation is nothing *but* topology — where the water enters, which channels carry it, how it drains. Building it would have meant inventing the centrepiece and dressing it as history.
 
 **Cost:** the more charismatic subject, and the best single fact I had.
 **Why it was right:** people-flow has the opposite profile — the topology is the attested part (arches, numerals, wedge structure) and only the behaviour needs importing from measurement. A tool whose whole posture is "every figure carries its evidence" cannot have an invented centrepiece.
 
-### 2. Front end only, zero dependencies, no build step
+### 2. Front-end only or build a server?
 
-A back end was never needed and would have been actively worse. Nothing here requires one: no secrets, no accounts, no data too large to ship, and no precomputation — 50,000 agents run in real time in the browser, so there was **no performance compromise to trade against**. What a server *would* have added is a cold start on the morning a reviewer opens the link, an account in the critical path, and something to keep alive for the weeks between submission and review. The most common way a take-home dies is a dead demo link.
+This app does not require user accounts and no persistent data storage was needed. Moreover, early testing of the algorithm, demonstrated that the browser was able to keep up with animating 50,000 agents simultaneous without any back-end help: no noticeable lag or loss of fidelity. Finally, the full algorithm was written from scratch and required a small amount of code by modern browser standards. Thus, there was no need to import large libraries and that could slow down load times (or introduce a build step to compress the JS and combat those slow load times). For these reasons, I elected to make this a front-end only architecture. Moreover, given this is a demo, front-end only maximizes the chances of the demo running successfully for all users. There is no server than can become unavailable or go down.
 
-The same logic extended to tooling. Node was available; I chose not to use it in the shipped artifact. One of the ways this gets read is source-in-a-browser on GitHub, and a build step means either a committed `dist/` (confusing in exactly that view) or a Pages action that can fail quietly between submission and review. `// @ts-check` with JSDoc gives editor-level type safety with none of that.
+The same logic extended to tooling. One of the ways this gets read is source-in-a-browser on GitHub, and a build step means either a committed `dist/` (confusing in exactly that view) or a Pages action that can fail quietly between submission and review. `// @ts-check` with JSDoc gives editor-level type safety with none of that.
 
 **Cost:** no server-side persistence, no shared state, and hand-rolled charts instead of a library.
 **Bought:** repo link and prototype link are the same artifact, and there is no runtime that can fail.
@@ -99,7 +95,7 @@ The detail I would defend hardest is the **"watch for this" line** on each step 
 Every figure the tool displays goes through one module that pairs it with an evidence tier, and `claim()` throws on an unregistered key. Presenting a contested number as settled becomes structurally impossible rather than a discipline I have to keep remembering at 1 a.m.
 
 **Cost:** indirection on every displayed value, and about twenty lines.
-**Bought:** it caught things. The water act died because its channel topology had no tier to put it in — the registry asked a question I could not answer. It is also why the tool can say out loud that the famous fifteen-minute figure is **unsourced**, which is a claim most explainers of this building quietly launder into fact.
+**Bought:** it caught problems. The water act died because its channel topology had no tier to put it in — the registry asked a question I could not answer. It is also why the tool can say out loud that the famous fifteen-minute figure is **unsourced**, which is a claim most explainers of this building quietly launder into fact.
 
 ### 5. Which crowd physics
 
@@ -149,7 +145,7 @@ There is no evidence the Colosseum ever ran with gates shut. It was a disaster s
 
 The tour's Next button appeared dead, and it took three rounds to find. The wrong theories were cache staleness and a canvas overlapping the button — both plausible, both wrong. The actual cause: a careless string replace had matched `requestAnimationFrame(frame);`, which appears *inside* `frame()` itself, and injected the initialisation block into the render loop. `tour.start()` was running sixty times a second. Every click worked and was undone about sixteen milliseconds later.
 
-The reason it survived three rounds is the part worth recording. I was inspecting the page through an automation tab, and **browsers suspend `requestAnimationFrame` in backgrounded tabs** — so the loop containing the bug never ran on my side. `elementFromPoint` said the button was on top; a `MutationObserver` counted zero mutations; a synthetic click advanced the tour. Every measurement was correct, and every one was of a page that could not exhibit the defect. It was solved by a human looking at the inspector and saying *"the aside appears to be recreating itself many times a second."*
+The reason it survived three rounds is the part worth recording. Claude was inspecting the page through an automation tab, and **browsers suspend `requestAnimationFrame` in backgrounded tabs** — so the loop containing the bug never ran on its side. `elementFromPoint` said the button was on top; a `MutationObserver` counted zero mutations; a synthetic click advanced the tour. Every measurement was correct, and every one was of a page that could not exhibit the defect. It was solved by me manually looking at the inspector and saying *"the aside appears to be recreating itself many times a second."* I noticed the hallmark flashing of the element tag to indicate recreation from my years of experience debugging browser HTML and JS issues.
 
 Three things changed as a result, and I would keep all of them:
 
@@ -157,7 +153,7 @@ Three things changed as a result, and I would keep all of them:
 - **A visible build stamp**, because two of those rounds were spent not knowing which build was in the browser — plus a `validate.js` check that the version agrees across every file, turning the manual step that caused a lost edit into a tested invariant.
 - **A fault banner**, because a control that silently does nothing is the worst failure a tool can have: it reads as a design decision rather than a bug.
 
-**The transferable lesson:** treat "works for me" as near-zero evidence when your environment cannot execute the code path in question, and ask the person who *can* see it to look, early.
+**The transferable lesson:** challenge AI saying "works for me" about a browser UI visual because its read of what's on screen is hampered by animation frame limitations for background tabs.
 
 ### 10. Commissioning a review I might not like
 
