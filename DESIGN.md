@@ -29,7 +29,15 @@ Importantly, I decided to enable running a high-fidelity simulation live instead
 | Colosseum stair | 2.8 m | 1.14 p/s/m | **3.19 people/s** |
 | Modern arena stair | 4.0 m | 0.80 p/s/m | **3.20 people/s** |
 
-A stair thirty percent narrower does the same work in the same time. Across a whole building that compounds: to match the Colosseum, a modern arena needs about **42% more staircase space**.
+A stair thirty percent narrower does the same work in the same time. Across a whole building that compounds: to match the Colosseum, a modern arena needs about **42% more total stair width**.
+
+Worth being precise about what that 42% is, because it is easy to misread. It is not that each grand staircase is 42% wider — they are about nine times wider each, and there are a ninth as many. In the comparison both buildings are handed the *same* total stair width, 212.8 m, and the difference is that only about 70% of the modern building's width carries flow. To get 212.8 m of *working* width you would need 303 m of nominal width: hence 42% more.
+
+The model agrees with that figure independently, which is worth more than quoting it. Hand the modern building 42% more nominal width and its clearance time lands on the Colosseum's exactly — 9m12 either way. `validate.js` asserts it.
+
+It also explains something that looks like a weak result until you take it apart. Left alone, the two buildings finish only 6% apart (9m12 against 9m45) despite a 30% difference in working stair width. That is because stair capacity accounts for only about 40% of the clearance time — the rest is walking to the stair and descending forty metres, and neither cares how wide the stair is. The extra queueing largely hides inside travel time that was happening anyway. It is also why the published study finds near-parity in *time* between an ancient and a modern arena while finding a large gap in *flow per metre*: clock time is a blunt instrument for this, and the efficiency is where the difference actually lives.
+
+And in the other direction, a real modern building is not stingy with stairs — it is the opposite. The Colosseum runs on about 4.3 mm of working stair per spectator where a modern code asks for 7.6 mm, roughly **77% more width per person**. Modern arenas buy their egress performance with more stair; the Colosseum buys it by wasting less of what it has.
 
 **And the social hierarchy is in the circulation plan.** Rank fixed your tier, tier fixed your height, and height was most of your journey home. The cheapest seats — the wooden gallery for the poor, slaves and women — were forty metres up and had the longest way down.
 

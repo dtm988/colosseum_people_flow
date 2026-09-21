@@ -8,7 +8,7 @@
  * carry the meaning.
  */
 
-import { WEDGES, isAxial } from './geometry.js?v=b21';
+import { WEDGES, isAxial } from './geometry.js?v=b22';
 
 const FONT = '11px system-ui, -apple-system, "Segoe UI", sans-serif';
 const MONO = '11px ui-monospace, SFMono-Regular, Menlo, monospace';

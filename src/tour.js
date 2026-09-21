@@ -156,7 +156,7 @@ export const STEPS = [
            about 70% of a modern opening carries flow at all.
            <br><br>Across a whole building that compounds. Turn it round and it is the claim
            this tool exists to make: <b>the Colosseum empties as fast as a modern arena on about
-           thirty percent less staircase</b> — and the reason is everything you watched in the
+           thirty percent less total stair width</b> — and the reason is everything you watched in the
            first half, that no two routes share a corridor, so every metre of stair runs at
            close to its theoretical maximum.`,
     setup: (api) => {

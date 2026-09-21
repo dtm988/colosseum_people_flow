@@ -1,6 +1,6 @@
 # Colosseum People Flow
 
-**Fifty thousand people out as fast as a modern arena — on about thirty percent less staircase.**
+**Fifty thousand people out as fast as a modern arena — on about thirty percent less total stair width.**
 
 An interactive model of how the Flavian Amphitheatre emptied, and why a building with less egress width than a modern code would permit still clears in a comparable time.
 

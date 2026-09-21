@@ -76,8 +76,38 @@ const vC = venueOf('colosseum'), vM = venueOf('modern');
 console.log('\nWhole building, same nominal exit width');
 console.log(`  Colosseum   ${vC.exits.length} stairs x ${f2(vC.stairW)} m effective  ->  ${mmss(runs.routed.t100)}`);
 console.log(`  Modern      ${vM.exits.length} stairs x ${f2(vM.nominalStairW)} m nominal, ${f2(vM.stairW)} m effective  ->  ${mmss(modern.t100)}`);
-console.log(`  To match the Colosseum it needs ${Math.round(100 / vM.efficiency - 100)}% more staircase.`);
+console.log(`  To match the Colosseum it needs ${Math.round(100 / vM.efficiency - 100)}% more TOTAL STAIR WIDTH`);
+console.log(`  (both buildings are given the same ${f2(vC.exits.length * vC.stairW)} m of nominal stair; only ${Math.round(100 * vM.efficiency)}% of the modern building's carries flow)`);
 console.log(`  Colosseum egress width: ${f2(vC.exits.length * vC.stairW / N * 1000)} mm per spectator; a modern code asks 7.6 mm.`);
+
+// The 42% is imported from two published flow figures. Does the model itself
+// agree? Hand the modern building that much extra nominal width and its
+// clearance time should land on the Colosseum's.
+{
+  const c = createCrowd({ n: N, seed: 12345, venue: 'modern' });
+  const scale = 1 / vM.efficiency;
+  c.venue = { ...c.venue, stairW: c.venue.stairW * scale, gateW: c.venue.gateW * scale };
+  c.stairCellArea = c.venue.stairW * 1.5;
+  c.stairCap = Math.max(1, Math.floor(6 * c.stairCellArea));
+  c.throatArea = c.venue.gateW * 3;
+  c.throatCap = Math.max(1, Math.floor(6 * c.throatArea));
+  const widened = runToCompletion(c);
+  const delta = Math.abs(widened.t100 - runs.routed.t100);
+  console.log(`  modern + ${Math.round(100 * scale - 100)}% nominal width -> ${mmss(widened.t100)} (Colosseum ${mmss(runs.routed.t100)})`);
+  check('the width penalty the literature implies is the one the model measures', delta <= 15,
+    `${Math.round(delta)}s apart`);
+}
+
+// Capacity is not the whole clearance time, which is why the two buildings sit
+// only 6% apart on the clock while differing 30% in working width.
+{
+  const PEAK = 1.1;
+  const floorC = N / (vC.exits.length * vC.stairW * PEAK);
+  const floorM = N / (vM.exits.length * vM.stairW * PEAK);
+  console.log(`  queueing is ${Math.round(100 * floorC / runs.routed.t100)}% of the Colosseum run, ` +
+    `${Math.round(100 * floorM / modern.t100)}% of the modern one - the rest is walking and descending, ` +
+    `which stair width does not touch.`);
+}
 
 // --- the cache-busting version has to agree everywhere ---------------------
 //
