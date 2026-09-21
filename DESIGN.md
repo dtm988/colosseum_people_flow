@@ -117,6 +117,8 @@ The deciding argument was not effort, it was what I would be able to *claim*. Wi
 
 It also needed correcting twice in flight. A pure speed-density rule slows people but never stops them entering, so stair cells were reaching **140 people per square metre** and reporting flow rates the physics cannot deliver; jam-density exclusion fixed that. And an earlier version applied a stair slowdown *on top of* the density curve, double-counting it and capping stairs at half their real capacity.
 
+Moreover, the initial implementation using this physics algorithm closely matched the published flow rate from the 2022 study, which gave confidence that it was modeling the movement accurately.
+
 ### 6. What the tool is *about*: assigned exits, or stair efficiency
 
 This project started as a sharding thesis. The tagline was *"your ticket was a route, not a seat"* — the argument being that pre-assigned exits were what made the building fast, which is a lovely systems story about static routing beating runtime scheduling.
@@ -186,6 +188,7 @@ The comparison survived removing the artifact (9m45 against 9m12), so the findin
 4. **A real modern stadium**, surveyed rather than synthesised, so the comparison rests on a building instead of a thought experiment.
 5. **Validation against the published model's intermediate curves**, not just its endpoints — density over time is where the paper's most interesting claim lives (Colosseum density falls, modern accumulates) and we currently cite it rather than reproduce it.
 6. **A hover layer on the charts**, and the wedge-by-wedge throughput strip as a small-multiples view.
+7. **Dive deep on the physics algorithms**, did I choose the right one? Am I getting lucky with the flow rate or is it modeled as accurately as possible? With more time on this project I would study the available algorithms more and pressure test the current implementation to ensure it is the best option and accurately modeling this flow.
 
 ## Time spent
 
