@@ -100,6 +100,13 @@ main {
   gap: 0.9rem;
 }
 
+/* Panel children keep their natural height and the panel scrolls.
+   Without this they are flex items in a column with a max-height, so opening
+   the assumptions drawer makes its siblings shrink - and because .metrics
+   clips its own overflow, the stat tiles get crushed to nothing instead of
+   pushing the panel into a scroll. They looked like they had disappeared. */
+.panel > * { flex: 0 0 auto; }
+
 .controls { display: flex; flex-direction: column; gap: 0.7rem; }
 .row { display: flex; gap: 0.5rem; }
 .row button { flex: 1; }

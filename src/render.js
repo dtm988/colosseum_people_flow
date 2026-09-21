@@ -12,8 +12,8 @@
 import {
   OUTER, ARENA, WEDGES, WEDGE_ANGLE, TIERS, AXIAL_WEDGES, isAxial,
   ellipsePoint, wedgeAngle,
-} from './geometry.js?v=b20';
-import { PHASE_DONE, PHASE_STAIR } from './crowd.js?v=b20';
+} from './geometry.js?v=b21';
+import { PHASE_DONE, PHASE_STAIR } from './crowd.js?v=b21';
 
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
 /** @param {number} n */

@@ -42,12 +42,12 @@
  *      free.
  */
 
-import { value } from './claims.js?v=b20';
+import { value } from './claims.js?v=b21';
 import {
   OUTER, ARENA, WEDGES, WEDGE_ANGLE, TIERS, PUBLIC_WEDGES, AXIAL_WEDGES,
   ellipsePoint, wedgeAngle, descentLength,
-} from './geometry.js?v=b20';
-import { mulberry32, weightedPick, geometricOffset } from './rng.js?v=b20';
+} from './geometry.js?v=b21';
+import { mulberry32, weightedPick, geometricOffset } from './rng.js?v=b21';
 
 // ---------------------------------------------------------------------------
 // Behavioural constants, all traceable to claims.js

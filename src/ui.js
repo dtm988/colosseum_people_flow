@@ -4,12 +4,12 @@
  * the building lives in the modules this imports.
  */
 
-import { createCrowd, step, sample, metrics } from './crowd.js?v=b20';
-import { PlanView } from './render.js?v=b20';
-import { ClearanceChart, GateStrip, mmss } from './chart.js?v=b20';
-import { CLAIMS, format, value } from './claims.js?v=b20';
-import { TIERS, isAxial, heightAt } from './geometry.js?v=b20';
-import { Tour } from './tour.js?v=b20';
+import { createCrowd, step, sample, metrics } from './crowd.js?v=b21';
+import { PlanView } from './render.js?v=b21';
+import { ClearanceChart, GateStrip, mmss } from './chart.js?v=b21';
+import { CLAIMS, format, value } from './claims.js?v=b21';
+import { TIERS, isAxial, heightAt } from './geometry.js?v=b21';
+import { Tour } from './tour.js?v=b21';
 
 /**
  * Palette. Two categorical slots for the two exit policies, validated for
@@ -33,7 +33,7 @@ const THEME = {
 const SPEEDS = [1, 5, 15, 30, 60, 120];
 
 /** Bumped on every deploy, so "which build am I looking at" is never a guess. */
-const BUILD = 'b20';
+const BUILD = 'b21';
 console.log(`[colosseum] build ${BUILD} — tour: click, arrow keys, or Escape`);
 
 const $ = (/** @type {string} */ id) => /** @type {HTMLElement} */ (document.getElementById(id));
